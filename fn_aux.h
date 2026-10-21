@@ -66,7 +66,31 @@ struct idx2 {
 };
 typedef struct idx2 Idx2Niveis;
 
+/* =========================== STRUCT DE CONSULTA ===========================*/
+struct compra {
+    int user_id;
+    double preco;
+}; typedef struct compra CompraRegistro;
+
+struct user {
+    int user_id;
+    int qtd;
+    double total;
+}; typedef struct user AgregadoUsuario;
+
+struct cat {
+    long long cat_id;
+    int qtd;
+    double total;
+}; typedef struct cat AgregadoCat;
+
+
+
 void formatar_registro(char* formatada, char* original, int tam);
 int comparar_strings(char* formatada, char* original);
 FILE *carregar_arquivo(char *caminho, char *modo);
+int comparativo_compra(const void *a, const void *b);
+int comparativo_usuario_agreg(const void *a, const void *b);
+int comparativo_cat_agreg(const void *a, const void *b);
+
 #endif

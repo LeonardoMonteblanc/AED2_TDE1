@@ -42,6 +42,21 @@ Funções de tratamento e manipulação dos dados
 - No fim apaga os arquivos temporarios e partições
 
 ---
+### operacoes.c 
+
+`carregar_idx`
+`liberar_indice`
+`abrir_arquivos`
+`fechar_arquivos`
+
+
+`busca_bin_idx`
+`reconstruir_idx_prod`
+
+**Operações**
+- `prod_mostrar`
+- `prod_busca_bin`
+- `prod_consulta_idx`
 
 ### projetoaed.c
 Main onde é chamado o fluxo principal

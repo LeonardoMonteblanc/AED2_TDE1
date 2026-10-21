@@ -66,9 +66,9 @@ int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx) {
     fclose(ftopo);
     return 1;
 }
+
 /* =============== LIBERAR_INDICE ===============
- * Libera da memoria arquivo .idx na RAM
- */
+ * Libera da memoria arquivo .idx na RAM */
 void liberar_indice(Idx2Niveis* idx) {
     if (idx->base != NULL) {
         free(idx->base);
@@ -163,3 +163,247 @@ void fechar_arquivos() {
     liberar_indice(&idx_acessos);
     liberar_indice(&idx_prod);
 }
+
+void reconstruir_idx_prod() {
+    FILE * base, *topo;
+    long long i, pos;
+
+    base = carregar_arquivo(IDX_BASE_PROD,"wb");
+    topo = carregar_arquivo(IDX_TOPO_PROD, "wb");
+
+    fseek(p_prod, 0, SEEK_SET);
+
+    for(i=0; i < n_prod; i++) {
+        Produto p;
+
+        pos = ftell(p_prod);
+
+        if(fread(&p, sizeof(Produto), 1, p_prod) != 1) {
+            break;
+        }
+
+        fgetc(p_prod);
+
+        if(i% PROD_BASE == 0) {
+            EntradaIdx e;
+            e.chave = p.prod_id;
+            e.pos = pos;
+            fwrite(&e, sizeof(EntradaIdx),1, base);
+        }
+
+        if(i%PROD_TOPO == 0) {
+            EntradaIdx e;
+            e.chave = p.prod_id;
+            e.pos = pos;
+            fwrite(&e, sizeof(EntradaIdx),1, topo);
+        }
+    }
+
+    fclose(base);
+    fclose(topo);
+
+    liberar_indice(&idx_prod);
+    carregar_idx(IDX_BASE_PROD, IDX_TOPO_PROD, &idx_prod);
+}
+
+void prod_mostrar(long long ini, long long qtd) {
+    long long i;
+    long long tam_reg= sizeof(Produto)+1;
+
+    if(ini < 0) {
+        ini = 0;
+    }
+
+    if(ini+qtd > n_prod) {
+        qtd = n_prod - ini;
+    }
+
+    fseek(p_prod, ini * tam_reg, SEEK_SET);
+
+    for(i=0; i < qtd; i++) {
+        Produto p;
+
+        if(fread(&p, sizeof(Produto), 1, p_prod) != 1) {
+            break;
+        }
+
+        fgetc(p_prod);
+
+        printf("[%lld] id=%d | R$ %.2f | cat=%lld | %.30s | %.50s\n", ini+i, p.prod_id, p.preco, p.cat_id, p.marca, p.cat_cod);
+    }
+}
+
+int prod_busca_bin(int prod_id, Produto *out) {
+    long long esq =0;
+    long long dir = n_prod -1;
+    long long tam_reg = sizeof(Produto) +1;
+
+    while(esq <= dir) {
+        long long meio = (esq + dir) /2;
+
+        fseek(p_prod, meio * tam_reg, SEEK_SET);
+        fread(out, sizeof(Produto), 1, p_prod);
+
+        if(out->prod_id == prod_id) {
+            return 1;
+        }
+
+        if(out->prod_id < prod_id) {
+            esq = meio+1;
+        } else {
+            dir = meio -1;
+        }
+    }
+
+    return 0;
+}
+
+int prod_consulta_idx(int prod_id, Produto *out) {
+    int itopo, ibase, ini_base, fim_base, i;
+    long long pos;
+
+    itopo = busca_bin_idx(idx_prod.topo, 0, idx_prod.n_topo - 1, prod_id);
+    
+    if(itopo < 0) {
+        return 0;
+    }
+
+    ini_base = itopo * 10;
+    fim_base = ini_base + 9;
+
+    if(fim_base >= idx_prod.n_base) {
+        fim_base = idx_prod.n_base - 1;
+    }
+
+    ibase = busca_bin_idx(idx_prod.base, ini_base, fim_base, prod_id);
+
+    if(ibase < 0) {
+        return 0;
+    }
+
+    pos = idx_prod.base[ibase].pos;
+    fseek(p_prod, pos, SEEK_SET);
+
+    for(i=0; i < PROD_BASE; i++) {
+        if(fread(out, sizeof(Produto), 1, p_prod) != 1) {
+            return 0;
+        }
+
+        fgetc(p_prod);
+
+        if(out->prod_id == prod_id) {
+            return 1;
+        } 
+
+        if(out->prod_id > prod_id) {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+int prod_inserir(Produto *novo) {
+    Produto tmp;
+    FILE *out;
+
+    long long i;
+    long long tam_reg = sizeof(Produto) +1;
+    int inserido = 0;
+
+    if(prod_busca_bin(novo->prod_id, &tmp)) {
+        printf("Produto %d ja existe\n", novo->prod_id);
+        return 0;
+    }
+
+    out = carregar_arquivo(BIN_TEMP_PROD, "wb");
+    fseek(p_prod, 0, SEEK_SET);
+
+    for(i=0; i < n_prod; i++) {
+        Produto p;
+
+        if(fread(&p, sizeof(Produto),1, p_prod) != 1) {
+            break;
+        }
+
+        fgetc(p_prod);
+
+        if(!inserido && p.prod_id > novo->prod_id) {
+            fwrite(novo, sizeof(Produto),1, out);
+            fputc('\n', out);
+            inserido = 1;
+        }
+
+        fwrite(&p, sizeof(Produto),1, out);
+        fputc('\n', out);
+    }
+
+    
+    if(!inserido) {
+        fwrite(novo, sizeof(Produto),1, out);
+        fputc('\n', out);
+    }
+
+    fclose(out);
+    fclose(p_prod);
+
+    remove(BIN_PRODUTOS);
+    rename(BIN_TEMP_PROD, BIN_PRODUTOS);
+    p_prod = carregar_arquivo(BIN_PRODUTOS, "rb+");
+
+    fseek(p_prod, 0, SEEK_END);
+    n_prod = ftell(p_prod) / tam_reg;
+
+    reconstruir_idx_prod();
+    return 1;
+}
+
+int prod_remover(int prod_id) {
+    Produto tmp;
+    FILE *out;
+    
+    long long i;
+    long long tam_reg = sizeof(Produto) +1;
+    
+    int removidos = 0;
+
+    if(!prod_busca_bin(prod_id, &tmp)) {
+        printf("Produto %d nao encontrado\n", prod_id);
+        return 0;
+    }
+
+    out = carregar_arquivo(BIN_TEMP_PROD, "wb");
+    fseek(p_prod, 0, SEEK_SET);
+
+    for(i=0; i < n_prod; i++) {
+        Produto p;
+
+        if(fread(&p, sizeof(Produto), 1, p_prod) != 1) {
+            break;
+        }
+
+        fgetc(p_prod);
+
+        if(p.prod_id != prod_id) {
+            fwrite(&p, sizeof(Produto),1, out);
+            fputc('\n', out);
+        } else {
+            removidos++;
+        }
+    }
+
+    fclose(out);
+    fclose(p_prod);
+
+    remove(BIN_PRODUTOS);
+    rename(BIN_TEMP_PROD, BIN_PRODUTOS);
+    p_prod = carregar_arquivo(BIN_PRODUTOS, "rb+");
+
+    fseek(p_prod, 0 ,SEEK_END);
+    n_prod = ftell(p_prod)/tam_reg;
+
+    reconstruir_idx_prod();
+
+    return (removidos > 0);
+}
+

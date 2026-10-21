@@ -52,3 +52,47 @@ FILE *carregar_arquivo(char *caminho, char *modo) {
 	return f;
 
 }
+
+/* =============== FUNCOES AUXILIARES PARA COMPARAR ===============
+*/
+int comparativo_compra(const void *a, const void *b) {
+    CompraRegistro *ca = (CompraRegistro *) a;
+    CompraRegistro *cb = (CompraRegistro *) b;
+
+    if(ca->user_id < cb->user_id) {
+        return -1;
+    }
+    if(ca->user_id > cb->user_id) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int comparativo_usuario_agreg(const void *a, const void *b) {
+    AgregadoUsuario *ca = (AgregadoUsuario *) a;
+    AgregadoUsuario *cb = (AgregadoUsuario *) b;
+
+    if(ca->total > cb->total) {
+        return -1;
+    }
+    if(ca->total < cb->total) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int comparativo_cat_agreg(const void *a, const void *b) {
+    AgregadoCat *ca = (AgregadoCat *) a;
+    AgregadoCat *cb = (AgregadoCat *) b;
+
+    if(ca->total > cb->total) {
+        return -1;
+    }
+    if(ca->total < cb->total) {
+        return 1;
+    }
+
+    return 0;
+}
