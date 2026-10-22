@@ -7,6 +7,9 @@
 #include <time.h>
 
 #include "fn_string.h"
+#include "tipos.h"
+#include "arquivos.h"
+#include "comparadores.h"
 
 /* =============== MONTAR_REGISTRO_ACESSO ===============
  * Preenche a struct usando os dados do csv
@@ -21,9 +24,9 @@ void montar_acesso(char* campos[], int n, Acesso* a) {
     a->id = n;
     a->usuario_id = atoi(campos[7]);
     a->produto_id = atoi(campos[2]);
-    a->evento_tipo = converter_evento(campos[1]);
+    a->evento_tipo = str_converter_evento(campos[1]);
     a->preco = atof(campos[6]);
-    formatar_registro(a->evento_time, campos[0], 24);
+    str_formatar_registro(a->evento_time, campos[0], 24);
 }
 
 /* =============== MONTAR_REGISTRO_PRODUTOS ===============
@@ -32,8 +35,8 @@ void montar_produtos(char* campos[], Produto* p) {
     p->id = atoi(campos[2]);
     p->categoria_id = atoll(campos[3]);
     p->preco = atof(campos[6]);
-    formatar_registro(p->marca, campos[5], 30);
-    formatar_registro(p->categoria_cod, campos[4], 50);
+    str_formatar_registro(p->marca, campos[5], 30);
+    str_formatar_registro(p->categoria_cod, campos[4], 50);
 }
 
 /* =============== GERAR_BIN ===============
@@ -75,8 +78,8 @@ void gerar_bin() {
             Produto prod;
             long long pos;
 
-            remover_quebra(linha);
-            quant = separar_campos(linha, campos, 9);
+            str_remover_quebra(linha);
+            quant = str_separar_linha(linha, campos, 9);
 			
 			if(quant < 9) {
 				ignoradas++;
@@ -144,7 +147,7 @@ int gerar_part_ordenada() {
     num_part = 0;
 
     while ((lidos = fread(buffer, sizeof(Produto), REGISTRO_BLOCO, temp)) > 0) {
-        qsort(buffer, lidos, sizeof(Produto), comparar_prod);
+        qsort(buffer, lidos, sizeof(Produto), comparativo_produto);
         snprintf(nome, sizeof(nome), BIN_PART_PROD, num_part);
 
         saida = abrir_arquivo(nome, "wb");
@@ -221,7 +224,7 @@ void intercalar_part_prod(int total_part) {
                 continue;
             }
 
-            if (menor == -1 || atuais[i].prod_id < atuais[menor].prod_id) {
+            if (menor == -1 || atuais[i].id < atuais[menor].id) {
                 menor = i;
             }
         }
@@ -230,8 +233,8 @@ void intercalar_part_prod(int total_part) {
             break;
         }
 
-        if (atuais[menor].prod_id != ult_prod_id) {
-            ult_prod_id = atuais[menor].prod_id;
+        if (atuais[menor].id != ult_prod_id) {
+            ult_prod_id = atuais[menor].id;
 
             pos = ftell(saida);
             fwrite(&atuais[menor], sizeof(Produto), 1, saida);
@@ -239,14 +242,14 @@ void intercalar_part_prod(int total_part) {
 
             if (gravados % PROD_BASE == 0) {
                 EntradaIdx e;
-                e.chave = atuais[menor].prod_id;
+                e.chave = atuais[menor].id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, base);
             }
 
             if (gravados % PROD_TOPO == 0) {
                 EntradaIdx e;
-                e.chave = atuais[menor].prod_id;
+                e.chave = atuais[menor].id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, topo);
             }

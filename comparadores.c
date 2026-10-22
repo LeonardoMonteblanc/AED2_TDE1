@@ -1,3 +1,6 @@
+#include "tipos.h"
+#include "comparadores.h"
+
 // =============== COMPARATIVO_PRODUTO ===============
 int comparativo_produto(const void* a, const void* b) {
     const Produto* pa = (const Produto*)a;

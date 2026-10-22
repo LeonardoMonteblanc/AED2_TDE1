@@ -1,4 +1,7 @@
 #include "arquivos.h"
+#include "tipos.h"
+#include <stdlib.h>
+
 //=============== ABRIR_ARQUIVOS =============== 
 FILE *abrir_arquivo(char *caminho, char *modo) {
 	FILE *f = fopen(caminho, modo);
@@ -90,11 +93,11 @@ int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx) {
     tam_topo = ftell(ftopo);
     fseek(ftopo, 0, SEEK_SET);
 
-    idx->n_base = (int)(tam_base / sizeof(EntradaIdx));
-    idx->n_topo = (int)(tam_topo / sizeof(EntradaIdx));
+    idx->qtd_base = (int)(tam_base / sizeof(EntradaIdx));
+    idx->qtd_topo = (int)(tam_topo / sizeof(EntradaIdx));
 
-    idx->base = (EntradaIdx*)malloc(idx->n_base * sizeof(EntradaIdx));
-    idx->topo = (EntradaIdx*)malloc(idx->n_topo * sizeof(EntradaIdx));
+    idx->base = (EntradaIdx*)malloc(idx->qtd_base * sizeof(EntradaIdx));
+    idx->topo = (EntradaIdx*)malloc(idx->qtd_topo * sizeof(EntradaIdx));
 
     if (idx->base == NULL || idx->topo == NULL) {
         printf("Erro: sem memoria para os indices\n");
@@ -109,16 +112,16 @@ int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx) {
             idx->topo = NULL;
         }
 
-        idx->n_base = 0;
-        idx->n_topo = 0;
+        idx->qtd_base = 0;
+        idx->qtd_topo = 0;
 
         fclose(fbase);
         fclose(ftopo);
         return 0;
     }
 
-    fread(idx->base, sizeof(EntradaIdx), idx->n_base, fbase);
-    fread(idx->topo, sizeof(EntradaIdx), idx->n_topo, ftopo);
+    fread(idx->base, sizeof(EntradaIdx), idx->qtd_base, fbase);
+    fread(idx->topo, sizeof(EntradaIdx), idx->qtd_topo, ftopo);
 
     fclose(fbase);
     fclose(ftopo);
@@ -138,8 +141,8 @@ void liberar_indice(Idx2Niveis* idx) {
         idx->topo = NULL;
     }
 
-    idx->n_base = 0;
-    idx->n_topo = 0;
+    idx->qtd_base = 0;
+    idx->qtd_topo = 0;
 }
 
 
@@ -166,14 +169,14 @@ void reconstruir_idx_prod() {
 
         if(i% PROD_BASE == 0) {
             EntradaIdx e;
-            e.chave = p.prod_id;
+            e.chave = p.id;
             e.pos = pos;
             fwrite(&e, sizeof(EntradaIdx),1, base);
         }
 
         if(i%PROD_TOPO == 0) {
             EntradaIdx e;
-            e.chave = p.prod_id;
+            e.chave = p.id;
             e.pos = pos;
             fwrite(&e, sizeof(EntradaIdx),1, topo);
         }

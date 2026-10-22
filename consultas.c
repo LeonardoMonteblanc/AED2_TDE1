@@ -1,4 +1,7 @@
 #include "consultas.h"
+#include "arquivos.h"
+#include "comparadores.h"
+#include "tipos.h"
 
 #include <io.h>
 #include <stdio.h>
@@ -47,7 +50,7 @@ void mostrar_produtos(long long ini, long long qtd) {
 
         fgetc(p_prod);
 
-        printf("[%lld] id=%d | R$ %.2f | cat=%lld | %.30s | %.50s\n", ini+i, p.prod_id, p.preco, p.cat_id, p.marca, p.cat_cod);
+        printf("[%lld] id=%d | R$ %.2f | cat=%lld | %.30s | %.50s\n", ini+i, p.id, p.preco, p.categoria_id, p.marca, p.categoria_cod);
     }
 }
 
@@ -84,7 +87,7 @@ int buscar_produto_com_idx(int prod_id, Produto *out) {
     int itopo, ibase, ini_base, fim_base, i;
     long long pos;
 
-    itopo = busca_bin_idx(idx_prod.topo, 0, idx_prod.n_topo - 1, prod_id);
+    itopo = busca_bin_idx(idx_prod.topo, 0, idx_prod.qtd_topo - 1, prod_id);
     
     if(itopo < 0) {
         return 0;
@@ -93,8 +96,8 @@ int buscar_produto_com_idx(int prod_id, Produto *out) {
     ini_base = itopo * 10;
     fim_base = ini_base + 9;
 
-    if(fim_base >= idx_prod.n_base) {
-        fim_base = idx_prod.n_base - 1;
+    if(fim_base >= idx_prod.qtd_base) {
+        fim_base = idx_prod.qtd_base - 1;
     }
 
     ibase = busca_bin_idx(idx_prod.base, ini_base, fim_base, prod_id);
@@ -134,12 +137,12 @@ int inserir_produto(Produto *novo) {
     long long tam_reg = sizeof(Produto) +1;
     int inserido = 0;
 
-    if(prod_busca_bin(novo->prod_id, &tmp)) {
-        printf("Produto %d ja existe\n", novo->prod_id);
+    if(busca_bin_produtos(novo->id, &tmp)) {
+        printf("Produto %d ja existe\n", novo->id);
         return 0;
     }
 
-    out = carregar_arquivo(BIN_TEMP_PROD, "wb");
+    out = abrir_arquivo(BIN_TEMP_PROD, "wb");
     fseek(p_prod, 0, SEEK_SET);
 
     for(i=0; i < n_prod; i++) {
@@ -151,7 +154,7 @@ int inserir_produto(Produto *novo) {
 
         fgetc(p_prod);
 
-        if(!inserido && p.prod_id > novo->prod_id) {
+        if(!inserido && p.id > novo->id) {
             fwrite(novo, sizeof(Produto),1, out);
             fputc('\n', out);
             inserido = 1;
@@ -172,7 +175,7 @@ int inserir_produto(Produto *novo) {
 
     remove(BIN_PRODUTOS);
     rename(BIN_TEMP_PROD, BIN_PRODUTOS);
-    p_prod = carregar_arquivo(BIN_PRODUTOS, "rb+");
+    p_prod = abrir_arquivo(BIN_PRODUTOS, "rb+");
 
     fseek(p_prod, 0, SEEK_END);
     n_prod = ftell(p_prod) / tam_reg;
@@ -192,12 +195,12 @@ int remover_produto(int prod_id) {
     
     int removidos = 0;
 
-    if(!prod_busca_bin(prod_id, &tmp)) {
+    if(!busca_bin_produtos(prod_id, &tmp)) {
         printf("Produto %d nao encontrado\n", prod_id);
         return 0;
     }
 
-    out = carregar_arquivo(BIN_TEMP_PROD, "wb");
+    out = abrir_arquivo(BIN_TEMP_PROD, "wb");
     fseek(p_prod, 0, SEEK_SET);
 
     for(i=0; i < n_prod; i++) {
@@ -209,7 +212,7 @@ int remover_produto(int prod_id) {
 
         fgetc(p_prod);
 
-        if(p.prod_id != prod_id) {
+        if(p.id != prod_id) {
             fwrite(&p, sizeof(Produto),1, out);
             fputc('\n', out);
         } else {
@@ -222,7 +225,7 @@ int remover_produto(int prod_id) {
 
     remove(BIN_PRODUTOS);
     rename(BIN_TEMP_PROD, BIN_PRODUTOS);
-    p_prod = carregar_arquivo(BIN_PRODUTOS, "rb+");
+    p_prod = abrir_arquivo(BIN_PRODUTOS, "rb+");
 
     fseek(p_prod, 0 ,SEEK_END);
     n_prod = ftell(p_prod)/tam_reg;
@@ -250,8 +253,8 @@ void consulta_prod_marca(char*marca) {
 
         fgetc(p_prod);
 
-        if(comparar_strings(p.marca, marca)) {
-            printf("  id=%d | R$ %.2f | %s\n", p.prod_id, p.preco, p.cat_cod);
+        if(str_comparar_strings(p.marca, marca)) {
+            printf("  id=%d | R$ %.2f | %s\n", p.id, p.preco, p.categoria_cod);
             c++;
         }
     }
@@ -303,7 +306,7 @@ void consulta_compradores() {
             }
         }
 
-        compras[n_compras].user_id = a.usuario_id;
+        compras[n_compras].usuario_id = a.usuario_id;
         compras[n_compras].preco = a.preco;
         n_compras++;
     }
@@ -329,17 +332,17 @@ void consulta_compradores() {
     i = 0;
 
     while(i < n_compras) {
-        int uid = compras[i].user_id;
+        int uid = compras[i].usuario_id;
         int qtd = 0;
         double tt = 0;
 
-        while(i < n_compras && compras[i].user_id == uid) {
+        while(i < n_compras && compras[i].usuario_id == uid) {
             qtd++;
             tt += compras[i].preco;
             i++;
         }
 
-        agreg[n_agreg].user_id = uid;
+        agreg[n_agreg].usuario_id = uid;
         agreg[n_agreg].qtd = qtd;
         agreg[n_agreg].total = tt;
         n_agreg++;
@@ -360,7 +363,7 @@ void consulta_compradores() {
 
     printf("Top 10 por faturamento:\n");
     for(i=0 ; i < top; i++) {
-        printf("user_id=%d | qtd=%d | R$ %.2f\n", agreg[i].user_id, agreg[i].qtd, agreg[i].total);
+        printf("user_id=%d | qtd=%d | R$ %.2f\n", agreg[i].usuario_id, agreg[i].qtd, agreg[i].total);
         
     }
 
@@ -378,10 +381,10 @@ void consulta_fat_categoria() {
 
     double fat_total = 0;
 
-    AgregadoCat *cats;
+    AgregadoCategoria *cats;
 
     printf("\nFATURAMENTO POR CATEGORI\n");
-    cats = (AgregadoCat *) malloc(cap * sizeof(AgregadoCat));
+    cats = (AgregadoCategoria*) malloc(cap * sizeof(AgregadoCategoria));
 
     if(cats == NULL) {
         printf("Nao foi possivel alocar memoria para consulta 3\n");
@@ -404,13 +407,13 @@ void consulta_fat_categoria() {
             continue;
         }
 
-        if(!prod_consulta_idx(a.prod_id, &prod)) {
+        if(!buscar_produto_com_idx(a.produto_id, &prod)) {
             continue;
         }
 
         encontrado = -1;
         for(j = 0; j < n_cats; j++) {
-            if(cats[j].cat_id == prod.cat_id) {
+            if(cats[j].categoria_id == prod.categoria_id) {
                 encontrado = j;
                 break;
             }
@@ -423,14 +426,14 @@ void consulta_fat_categoria() {
         } else {
             if(n_cats >= cap) {
                 cap *= 2;
-                cats = (AgregadoCat *) realloc(cats, cap * sizeof(AgregadoCat));
+                cats = (AgregadoCategoria *) realloc(cats, cap * sizeof(AgregadoCategoria));
 
                 if(cats == NULL) {
                     printf("Nao foi possivel realocar memoria para consulta 3\n");
                     return;
                 }
             }
-        cats[n_cats].cat_id = prod.cat_id;
+        cats[n_cats].categoria_id = prod.categoria_id;
         cats[n_cats].qtd = 1;
         cats[n_cats].total = a.preco;
         n_cats++;
@@ -441,12 +444,12 @@ void consulta_fat_categoria() {
     }
     printf("Categorias distintas: %d\n", n_cats);
     printf("Faturamento total: R$ %.2f\n", fat_total);
-    qsort(cats, n_cats, sizeof(AgregadoCat), comparativo_cat_agreg);
+    qsort(cats, n_cats, sizeof(AgregadoCategoria), comparativo_cat_agreg);
 
 
     printf("Top 10 por faturamento:\n");
     for(j = 0; j < n_cats && j < 10; j++) {
-        printf("cat_id=%lld | qtd=%d | R$ %.2f\n", cats[j].cat_id, cats[j].qtd, cats[j].total);
+        printf("cat_id=%lld | qtd=%d | R$ %.2f\n", cats[j].categoria_id, cats[j].qtd, cats[j].total);
     }
 
     free(cats);
