@@ -8,9 +8,6 @@
 
 #include "fn_string.h"
 
-
-
-
 /* =============== MONTAR_REGISTRO_ACESSO ===============
  * Preenche a struct usando os dados do csv
  * Ordem dos campos no CSV:
@@ -21,9 +18,9 @@
  *                    [8] user_session
  */
 void montar_acesso(char* campos[], int n, Acesso* a) {
-    a->acesso_id = n;
+    a->id = n;
     a->usuario_id = atoi(campos[7]);
-    a->prod_id = atoi(campos[2]);
+    a->produto_id = atoi(campos[2]);
     a->evento_tipo = converter_evento(campos[1]);
     a->preco = atof(campos[6]);
     formatar_registro(a->evento_time, campos[0], 24);
@@ -32,11 +29,11 @@ void montar_acesso(char* campos[], int n, Acesso* a) {
 /* =============== MONTAR_REGISTRO_PRODUTOS ===============
  * Preenche a struct usando os dados do csv */
 void montar_produtos(char* campos[], Produto* p) {
-    p->prod_id = atoi(campos[2]);
-    p->cat_id = atoll(campos[3]);
+    p->id = atoi(campos[2]);
+    p->categoria_id = atoll(campos[3]);
     p->preco = atof(campos[6]);
     formatar_registro(p->marca, campos[5], 30);
-    formatar_registro(p->cat_cod, campos[4], 50);
+    formatar_registro(p->categoria_cod, campos[4], 50);
 }
 
 /* =============== GERAR_BIN ===============
@@ -45,15 +42,15 @@ void montar_produtos(char* campos[], Produto* p) {
  * Acessos_topo: 1 EntradaIdx a cada 1000 acessos
  * Temp_prod: 1 prod por linha */
 void gerar_bin() {
-    FILE* acessos, *base, * topo, * temp_prod;
+    FILE* acessos, *base, * topo, *temp_prod;
     int cont, i, ignoradas;
 
     char* arq_csv[2] = {CSV_OUT, CSV_NOV};
 
-    acessos = carregar_arquivo(BIN_ACESSOS, "wb");
-    base = carregar_arquivo(IDX_BASE, "wb");
-    topo = carregar_arquivo(IDX_TOPO, "wb");
-    temp_prod = carregar_arquivo(BIN_TEMP_PROD, "wb");
+    acessos = abrir_arquivo(BIN_ACESSOS, "wb");
+    base = abrir_arquivo(IDX_BASE, "wb");
+    topo = abrir_arquivo(IDX_TOPO, "wb");
+    temp_prod = abrir_arquivo(BIN_TEMP_PROD, "wb");
 
     cont = 0;
     ignoradas = 0;
@@ -61,7 +58,7 @@ void gerar_bin() {
         FILE* csv;
         char linha[TAM_LINHA];
 
-        csv = carregar_arquivo(arq_csv[i], "r");
+        csv = abrir_arquivo(arq_csv[i], "r");
 
         if (fgets(linha, TAM_LINHA, csv) == NULL) {
             printf("%s: vazio ou somente cabecalho\n", arq_csv[i]);
@@ -119,23 +116,7 @@ void gerar_bin() {
     fclose(temp_prod);
 }
 
-/* =============== COMPARAR_PROD ===============
-Compara os ID de produto
-*/
-int comparar_prod(const void* a, const void* b) {
-    const Produto* pa = (const Produto*)a;
-    const Produto* pb = (const Produto*)b;
 
-    if (pa->prod_id < pb->prod_id) {
-        return -1;
-    }
-
-    if (pa->prod_id > pb->prod_id) {
-        return 1;
-    }
-
-    return 0;
-}
 
 /* =============== GERAR_PART_ORDENADA ===============
 Gera uma partição ordenada de produtos apenas com produtos únicos
@@ -149,7 +130,7 @@ int gerar_part_ordenada() {
     int num_part;
     char nome[64];
 
-    temp = carregar_arquivo(BIN_TEMP_PROD, "rb");
+    temp = abrir_arquivo(BIN_TEMP_PROD, "rb");
 
     bytes_buffer = (size_t) REGISTRO_BLOCO * sizeof(Produto);
     buffer = (Produto*) malloc(bytes_buffer);
@@ -166,7 +147,7 @@ int gerar_part_ordenada() {
         qsort(buffer, lidos, sizeof(Produto), comparar_prod);
         snprintf(nome, sizeof(nome), BIN_PART_PROD, num_part);
 
-        saida = carregar_arquivo(nome, "wb");
+        saida = abrir_arquivo(nome, "wb");
 
         fwrite(buffer, sizeof(Produto), lidos, saida);
         fclose(saida);
@@ -216,7 +197,7 @@ void intercalar_part_prod(int total_part) {
         char nome[64];
 
         snprintf(nome, sizeof(nome), BIN_PART_PROD, i);
-        parts[i] = carregar_arquivo(nome, "rb");
+        parts[i] = abrir_arquivo(nome, "rb");
         
         if (fread(&atuais[i], sizeof(Produto), 1, parts[i]) != 1) {
             fclose(parts[i]);
@@ -224,9 +205,9 @@ void intercalar_part_prod(int total_part) {
         }
     }
 
-    saida = carregar_arquivo(BIN_PRODUTOS, "wb");
-    base = carregar_arquivo(IDX_BASE_PROD, "wb");
-    topo = carregar_arquivo(IDX_TOPO_PROD, "wb");
+    saida = abrir_arquivo(BIN_PRODUTOS, "wb");
+    base = abrir_arquivo(IDX_BASE_PROD, "wb");
+    topo = abrir_arquivo(IDX_TOPO_PROD, "wb");
 
     ult_prod_id = -1;
     gravados = 0;
