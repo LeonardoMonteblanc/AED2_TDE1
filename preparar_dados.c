@@ -6,60 +6,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "fn_aux.h"
-
-#define TAM_LINHA 1024
-#define REGISTRO_BLOCO 10000000
-
-/* =============== CONVERTER_EVENTO ===============
- * Padroniza os eventos para int
- * 0 => "view"
- * 1 => "cart"
- * 2 => "purchase"
- * -1 => outros/desconhecido*/
-unsigned char converter_evento(char* texto) {
-    if (strcmp(texto, "view") == 0) {
-        return 0;
-    } else if (strcmp(texto, "cart") == 0) {
-        return 1;
-    } else if (strcmp(texto, "purchase") == 0) {
-        return 2;
-    }
-    return -1;
-}
-
-/* =============== REMOVER_QUEBRA_LINHA ===============
- * Remove /r e /r das linhas */
-void remover_quebra(char* linha) {
-    int i = 0;
-    while (linha[i] != '\0') {
-        if (linha[i] == '\r' || linha[i] == '\n') {
-            linha[i] = '\0';
-            return;
-        }
-        i++;
-    }
-}
-
-/* =============== SEPARAR_POR_VIRGULA ===============
- * Separa a string por virgulas */
-int separar_campos(char* linha, char* campos[], int max) {
-    int quant = 1;
-    int i = 0;
-
-    campos[0] = linha;
-
-    while (linha[i] != '\0' && quant < max) {
-        if (linha[i] == ',') {
-            linha[i] = '\0';
-            campos[quant] = &linha[i + 1];
-            quant++;
-        }
-        i++;
-    }
-
-    return quant;
-}
+#include "fn_string.h"
+#include "tipos.h"
+#include "arquivos.h"
+#include "comparadores.h"
 
 /* =============== MONTAR_REGISTRO_ACESSO ===============
  * Preenche a struct usando os dados do csv
@@ -71,22 +21,22 @@ int separar_campos(char* linha, char* campos[], int max) {
  *                    [8] user_session
  */
 void montar_acesso(char* campos[], int n, Acesso* a) {
-    a->acesso_id = n;
+    a->id = n;
     a->usuario_id = atoi(campos[7]);
-    a->prod_id = atoi(campos[2]);
-    a->evento_tipo = converter_evento(campos[1]);
+    a->produto_id = atoi(campos[2]);
+    a->evento_tipo = str_converter_evento(campos[1]);
     a->preco = atof(campos[6]);
-    formatar_registro(a->evento_time, campos[0], 24);
+    str_formatar_registro(a->evento_time, campos[0], 24);
 }
 
 /* =============== MONTAR_REGISTRO_PRODUTOS ===============
  * Preenche a struct usando os dados do csv */
 void montar_produtos(char* campos[], Produto* p) {
-    p->prod_id = atoi(campos[2]);
-    p->cat_id = atoll(campos[3]);
+    p->id = atoi(campos[2]);
+    p->categoria_id = atoll(campos[3]);
     p->preco = atof(campos[6]);
-    formatar_registro(p->marca, campos[5], 30);
-    formatar_registro(p->cat_cod, campos[4], 50);
+    str_formatar_registro(p->marca, campos[5], 30);
+    str_formatar_registro(p->categoria_cod, campos[4], 50);
 }
 
 /* =============== GERAR_BIN ===============
@@ -95,15 +45,15 @@ void montar_produtos(char* campos[], Produto* p) {
  * Acessos_topo: 1 EntradaIdx a cada 1000 acessos
  * Temp_prod: 1 prod por linha */
 void gerar_bin() {
-    FILE* acessos, *base, * topo, * temp_prod;
+    FILE* acessos, *base, * topo, *temp_prod;
     int cont, i, ignoradas;
 
     char* arq_csv[2] = {CSV_OUT, CSV_NOV};
 
-    acessos = carregar_arquivo(BIN_ACESSOS, "wb");
-    base = carregar_arquivo(IDX_BASE, "wb");
-    topo = carregar_arquivo(IDX_TOPO, "wb");
-    temp_prod = carregar_arquivo(BIN_TEMP_PROD, "wb");
+    acessos = abrir_arquivo(BIN_ACESSOS, "wb");
+    base = abrir_arquivo(IDX_BASE, "wb");
+    topo = abrir_arquivo(IDX_TOPO, "wb");
+    temp_prod = abrir_arquivo(BIN_TEMP_PROD, "wb");
 
     cont = 0;
     ignoradas = 0;
@@ -111,7 +61,7 @@ void gerar_bin() {
         FILE* csv;
         char linha[TAM_LINHA];
 
-        csv = carregar_arquivo(arq_csv[i], "r");
+        csv = abrir_arquivo(arq_csv[i], "r");
 
         if (fgets(linha, TAM_LINHA, csv) == NULL) {
             printf("%s: vazio ou somente cabecalho\n", arq_csv[i]);
@@ -128,8 +78,8 @@ void gerar_bin() {
             Produto prod;
             long long pos;
 
-            remover_quebra(linha);
-            quant = separar_campos(linha, campos, 9);
+            str_remover_quebra(linha);
+            quant = str_separar_linha(linha, campos, 9);
 			
 			if(quant < 9) {
 				ignoradas++;
@@ -144,14 +94,14 @@ void gerar_bin() {
 
             if (cont % ACESSO_BASE == 0) {
                 EntradaIdx e;
-                e.chave = a.acesso_id;
+                e.chave = a.id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, base);
             }
 
             if (cont % ACESSO_TOPO == 0) {
                 EntradaIdx e;
-                e.chave = a.acesso_id;
+                e.chave = a.id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, topo);
             }
@@ -169,23 +119,7 @@ void gerar_bin() {
     fclose(temp_prod);
 }
 
-/* =============== COMPARAR_PROD ===============
-Compara os ID de produto
-*/
-int comparar_prod(const void* a, const void* b) {
-    const Produto* pa = (const Produto*)a;
-    const Produto* pb = (const Produto*)b;
 
-    if (pa->prod_id < pb->prod_id) {
-        return -1;
-    }
-
-    if (pa->prod_id > pb->prod_id) {
-        return 1;
-    }
-
-    return 0;
-}
 
 /* =============== GERAR_PART_ORDENADA ===============
 Gera uma partição ordenada de produtos apenas com produtos únicos
@@ -199,7 +133,7 @@ int gerar_part_ordenada() {
     int num_part;
     char nome[64];
 
-    temp = carregar_arquivo(BIN_TEMP_PROD, "rb");
+    temp = abrir_arquivo(BIN_TEMP_PROD, "rb");
 
     bytes_buffer = (size_t) REGISTRO_BLOCO * sizeof(Produto);
     buffer = (Produto*) malloc(bytes_buffer);
@@ -213,10 +147,10 @@ int gerar_part_ordenada() {
     num_part = 0;
 
     while ((lidos = fread(buffer, sizeof(Produto), REGISTRO_BLOCO, temp)) > 0) {
-        qsort(buffer, lidos, sizeof(Produto), comparar_prod);
+        qsort(buffer, lidos, sizeof(Produto), comparativo_produto);
         snprintf(nome, sizeof(nome), BIN_PART_PROD, num_part);
 
-        saida = carregar_arquivo(nome, "wb");
+        saida = abrir_arquivo(nome, "wb");
 
         fwrite(buffer, sizeof(Produto), lidos, saida);
         fclose(saida);
@@ -266,7 +200,7 @@ void intercalar_part_prod(int total_part) {
         char nome[64];
 
         snprintf(nome, sizeof(nome), BIN_PART_PROD, i);
-        parts[i] = carregar_arquivo(nome, "rb");
+        parts[i] = abrir_arquivo(nome, "rb");
         
         if (fread(&atuais[i], sizeof(Produto), 1, parts[i]) != 1) {
             fclose(parts[i]);
@@ -274,9 +208,9 @@ void intercalar_part_prod(int total_part) {
         }
     }
 
-    saida = carregar_arquivo(BIN_PRODUTOS, "wb");
-    base = carregar_arquivo(IDX_BASE_PROD, "wb");
-    topo = carregar_arquivo(IDX_TOPO_PROD, "wb");
+    saida = abrir_arquivo(BIN_PRODUTOS, "wb");
+    base = abrir_arquivo(IDX_BASE_PROD, "wb");
+    topo = abrir_arquivo(IDX_TOPO_PROD, "wb");
 
     ult_prod_id = -1;
     gravados = 0;
@@ -290,7 +224,7 @@ void intercalar_part_prod(int total_part) {
                 continue;
             }
 
-            if (menor == -1 || atuais[i].prod_id < atuais[menor].prod_id) {
+            if (menor == -1 || atuais[i].id < atuais[menor].id) {
                 menor = i;
             }
         }
@@ -299,8 +233,8 @@ void intercalar_part_prod(int total_part) {
             break;
         }
 
-        if (atuais[menor].prod_id != ult_prod_id) {
-            ult_prod_id = atuais[menor].prod_id;
+        if (atuais[menor].id != ult_prod_id) {
+            ult_prod_id = atuais[menor].id;
 
             pos = ftell(saida);
             fwrite(&atuais[menor], sizeof(Produto), 1, saida);
@@ -308,14 +242,14 @@ void intercalar_part_prod(int total_part) {
 
             if (gravados % PROD_BASE == 0) {
                 EntradaIdx e;
-                e.chave = atuais[menor].prod_id;
+                e.chave = atuais[menor].id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, base);
             }
 
             if (gravados % PROD_TOPO == 0) {
                 EntradaIdx e;
-                e.chave = atuais[menor].prod_id;
+                e.chave = atuais[menor].id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, topo);
             }
