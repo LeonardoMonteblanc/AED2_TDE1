@@ -6,58 +6,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "fn_aux.h"
+#include "fn_string.h"
 
 
-/* =============== CONVERTER_EVENTO ===============
- * Padroniza os eventos para int
- * 0 => "view"
- * 1 => "cart"
- * 2 => "purchase"
- * -1 => outros/desconhecido*/
-unsigned char converter_evento(char* texto) {
-    if (strcmp(texto, "view") == 0) {
-        return 0;
-    } else if (strcmp(texto, "cart") == 0) {
-        return 1;
-    } else if (strcmp(texto, "purchase") == 0) {
-        return 2;
-    }
-    return -1;
-}
 
-/* =============== REMOVER_QUEBRA_LINHA ===============
- * Remove /r e /r das linhas */
-void remover_quebra(char* linha) {
-    int i = 0;
-    while (linha[i] != '\0') {
-        if (linha[i] == '\r' || linha[i] == '\n') {
-            linha[i] = '\0';
-            return;
-        }
-        i++;
-    }
-}
-
-/* =============== SEPARAR_POR_VIRGULA ===============
- * Separa a string por virgulas */
-int separar_campos(char* linha, char* campos[], int max) {
-    int quant = 1;
-    int i = 0;
-
-    campos[0] = linha;
-
-    while (linha[i] != '\0' && quant < max) {
-        if (linha[i] == ',') {
-            linha[i] = '\0';
-            campos[quant] = &linha[i + 1];
-            quant++;
-        }
-        i++;
-    }
-
-    return quant;
-}
 
 /* =============== MONTAR_REGISTRO_ACESSO ===============
  * Preenche a struct usando os dados do csv
