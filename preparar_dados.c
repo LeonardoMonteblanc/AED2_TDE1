@@ -8,8 +8,6 @@
 
 #include "fn_aux.h"
 
-#define TAM_LINHA 1024
-#define REGISTRO_BLOCO 10000000
 
 /* =============== CONVERTER_EVENTO ===============
  * Padroniza os eventos para int

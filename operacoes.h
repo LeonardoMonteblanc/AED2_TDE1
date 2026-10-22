@@ -3,14 +3,6 @@
 
 #include "fn_aux.h"
 
-extern FILE* p_acessos;
-extern FILE* p_prod;
-
-extern Idx2Niveis idx_acessos;
-extern Idx2Niveis idx_prod;
-
-extern long long n_acessos;
-extern long long n_prod;
 
 int abrir_arquivos();
 void fechar_arquivos();
