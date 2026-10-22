@@ -55,20 +55,7 @@ int str_separar_linha(char* linha, char* campos[], int max)
 
 
 
-//=============== ABRIR_ARQUIVOS =============== 
-/** 
- * @brief Recebe um ponteiro do caminho do arquivo e o modo de acesso
- *
- * @details Função tenta abrir o arquivo no modo indicado
- * @warning se não for possivel, encerra o programa e chama exit(1)
- *
- * @param[in] caminho Ponteiro com caminho do arquivo
- * @param[in] modo    Modo de acesso ao arquivo
- *
- * @return Ponteiro para FILE ou NULL
- */
 
-FILE * abrir_arquivo(char *caminho, char *modo);
 int comparativo_compra(const void *a, const void *b);
 int comparativo_usuario_agreg(const void *a, const void *b);
 int comparativo_cat_agreg(const void *a, const void *b);
