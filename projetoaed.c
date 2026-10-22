@@ -1,5 +1,7 @@
-#include "fn_aux.h"
-#include "operacoes.h"
+#include "fn_string.h"
+#include "consultas.h"
+#include "arquivos.h"
+#include "tipos.h"
 #include "preparar_dados.h"
 
 #include <stdlib.h>
@@ -42,35 +44,38 @@ int main() {
     // fechar_arquivos();
     
     // ================= CONSULTAS =================
-    if(!abrir_arquivos()) {
+    if(!carregar_dados()) {
         printf("Falha ao abrir os arquivos\n");
         return 1;
     }
 
-    prod_mostrar(0,30); // mostra os primeiros 30 produtos
+    mostrar_produtos(0,30); // mostra os primeiros 30 produtos
 
     Produto p;
-    if(prod_busca_bin(1004237, &p)) {
-        printf("Pesquisa binaria retornou: %d\n", p.prod_id);
+    if(busca_bin_produtos(1004237, &p)) {
+        printf("Pesquisa binaria retornou: %d\n", p.id);
 
     }
 
-    if(prod_consulta_idx(1004237, &p)) {
-        printf("Indice: %d\n", p.prod_id);
+    if(buscar_produto_com_idx(1004237, &p)) {
+        printf("Indice: %d\n", p.id);
     }
+/**
+ * INSERIR_PRODUTO deveria lidar com as responsabilidades de se comunicar
+ * e chamar outras funções para tratar os dados
+ */
+    // Produto novo;
+    // novo.prod_id = 12345678;
+    // novo.preco   = 99.99;
+    // novo.cat_id  = 12345;
+    // formatar_registro(novo.marca,   "TESTE",     30);
+    // formatar_registro(novo.cat_cod, "teste.cat", 50);
 
-    Produto novo;
-    novo.prod_id = 12345678;
-    novo.preco   = 99.99;
-    novo.cat_id  = 12345;
-    formatar_registro(novo.marca,   "TESTE",     30);
-    formatar_registro(novo.cat_cod, "teste.cat", 50);
-
-    prod_inserir(&novo);
+    // prod_inserir(&novo);
     
-    prod_mostrar(0,50);
+    mostrar_produtos(0,50);
 
-    prod_remover(novo.prod_id);
+    remover_produto(novo.prod_id);
 
      // ============ AS 3 CONSULTAS ============
     consulta_prod_marca("apple");

@@ -2,7 +2,7 @@
 #define ARQUIVOS_H
 
 #include <stdio.h>
-#include <tipos.h>
+#include "tipos.h"
 
 
 /** 
@@ -29,13 +29,13 @@ FILE * abrir_arquivo(char *caminho, char *modo);
  * 
  * @return 1 se deu certo | 0 em caso de falha
  */
-int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx)
+int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx);
 
 
 /**
  * @brief Desaloca o indice alocado em memoria pelo carregar_idx
  */
-void liberar_indice(Idx2Niveis* idx)
+void liberar_indice(Idx2Niveis* idx);
 
 
 
@@ -44,18 +44,18 @@ void liberar_indice(Idx2Niveis* idx)
  * 
  * @return 1 em caso de sucesso | 0 em caso de falha
  */
-int carregar_dados()
+int carregar_dados();
 
 /**
  * @brief Desaloca os indices e fecha os arquivos aberto por carregar_dados()
  */
-void liberar_dados()
+void liberar_dados();
 
 
 /**
  * @brief Refaz o index de produtos quando há alguma modificação
  */
-void reconstruir_idx_prod()
+void reconstruir_idx_prod();
 #endif
 
 

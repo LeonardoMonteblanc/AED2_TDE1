@@ -47,6 +47,6 @@ void str_remover_quebra(char* linha);
  *
  * @return Quantidade de campos lidos e armazenados
  */
-int str_separar_linha(char* linha, char* campos[], int max)
+int str_separar_linha(char* linha, char* campos[], int max);
 
 #endif

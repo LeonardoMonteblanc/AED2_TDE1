@@ -91,14 +91,14 @@ void gerar_bin() {
 
             if (cont % ACESSO_BASE == 0) {
                 EntradaIdx e;
-                e.chave = a.acesso_id;
+                e.chave = a.id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, base);
             }
 
             if (cont % ACESSO_TOPO == 0) {
                 EntradaIdx e;
-                e.chave = a.acesso_id;
+                e.chave = a.id;
                 e.pos = pos;
                 fwrite(&e, sizeof(EntradaIdx), 1, topo);
             }

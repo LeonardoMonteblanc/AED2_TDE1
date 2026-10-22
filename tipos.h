@@ -44,26 +44,24 @@ para usar com arquivos maiores, precisa das funções ftelli64 e fseeki64*/
 #define PROD_TOPO 1000
 
 
-// =============== VARIAVEIS GLOBAIS ===============
-FILE* p_acessos = NULL;
-FILE* p_prod = NULL;
-
-Idx2Niveis idx_acessos = {NULL, 0, NULL, 0};
-Idx2Niveis idx_prod = {NULL, 0, NULL, 0};
-
-long long n_acessos = 0;
-long long n_prod = 0;
+// =============== INDICES ===============
+struct entrada_indice {
+    int chave;      // 4 bytes
+    long long pos;  // 8 bytes
+};  // 12 bytes + 4 bytes de padding ==> 16 bytes
+typedef struct entrada_indice EntradaIdx;
 
 
+// =============== INDICES 2 NIVEIS ===============
+struct idx2 {
+    EntradaIdx* base;
+    int qtd_base;
+    EntradaIdx* topo;
+    int qtd_topo;
+};
+typedef struct idx2 Idx2Niveis;
 
-extern FILE* p_acessos;
-extern FILE* p_prod;
 
-extern Idx2Niveis idx_acessos;
-extern Idx2Niveis idx_prod;
-
-extern long long n_acessos;
-extern long long n_prod;
 
 
 // =============== STRUCT DE PRODUTO ===============
@@ -89,22 +87,27 @@ struct acesso {
 typedef struct acesso Acesso;
 
 
-// =============== INDICES ===============
-struct entrada_indice {
-    int chave;      // 4 bytes
-    long long pos;  // 8 bytes
-};  // 12 bytes + 4 bytes de padding ==> 16 bytes
-typedef struct entrada_indice EntradaIdx;
+// =============== VARIAVEIS GLOBAIS ===============
+FILE* p_acessos = NULL;
+FILE* p_prod = NULL;
+
+Idx2Niveis idx_acessos = {NULL, 0, NULL, 0};
+Idx2Niveis idx_prod = {NULL, 0, NULL, 0};
+
+long long n_acessos = 0;
+long long n_prod = 0;
 
 
-// =============== INDICES 2 NIVEIS ===============
-struct idx2 {
-    EntradaIdx* base;
-    int qtd_base;
-    EntradaIdx* topo;
-    int qtd_topo;
-};
-typedef struct idx2 Idx2Niveis;
+extern FILE* p_acessos;
+extern FILE* p_prod;
+
+extern Idx2Niveis idx_acessos;
+extern Idx2Niveis idx_prod;
+
+extern long long n_acessos;
+extern long long n_prod;
+
+// =============== VARIAVEIS GLOBAIS ===============
 
 
 // =============== STRUCT CONSULTA ===============

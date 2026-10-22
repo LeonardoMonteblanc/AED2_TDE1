@@ -2,6 +2,7 @@
 #define CONSULTAS_H
 
 #include "fn_string.h"
+#include "tipos.h"
 
 /**
  * @brief Busca binaria do intervalo onde <= chave
