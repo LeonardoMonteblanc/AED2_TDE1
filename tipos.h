@@ -65,6 +65,7 @@ struct prod {
 };  // 100 bytes + 4 bytes de padding ==> 104 bytes
 typedef struct prod Produto;
 
+
 // =============== STRUCT DE ACESSO ===============
 struct acesso {
     int id;              // 4 bytes
@@ -76,12 +77,14 @@ struct acesso {
 };  // 45 bytes + 3 bytes de padding ==> 48 bytes
 typedef struct acesso Acesso;
 
+
 // =============== INDICES ===============
 struct entrada_indice {
     int chave;      // 4 bytes
     long long pos;  // 8 bytes
 };  // 12 bytes + 4 bytes de padding ==> 16 bytes
 typedef struct entrada_indice EntradaIdx;
+
 
 // =============== INDICES 2 NIVEIS ===============
 struct idx2 {
@@ -92,13 +95,14 @@ struct idx2 {
 };
 typedef struct idx2 Idx2Niveis;
 
-// =============== STRUCT CONSULTA ===============
 
+// =============== STRUCT CONSULTA ===============
 // STRUCT QUE CRIA UM AGREGADO ENTRE USUARIO ID E PREÇO
 struct compra {
     int usuario_id;
     double preco;
 }; typedef struct compra CompraRegistro;
+
 
 // STRUCT QUE CRIA UM AGREGADO ENTRE USUARIO COM AS COMPRAS
 struct user {
@@ -106,6 +110,7 @@ struct user {
     int qtd;
     double total;
 }; typedef struct user AgregadoUsuario;
+
 
 // STRUCT QUE CRIA UM AGREGADO ENTRE CATEGORIA E COMPRAS
 struct cat {
