@@ -102,9 +102,9 @@ long long gravar_bin_acessos() {
             fwrite(&acesso_registro, sizeof(Acesso), 1, arq_acessos);
             fputc('\n', arq_acessos);
 
-            contador++;
+            gravar_arquivo_indice(contador, acesso_registro.id, posicao, indice_base, indice_topo);
 
-            gravar_arquivo_indice(&contador, acesso_registro.id, posicao, indice_base, indice_topo);
+            contador++;
         }
         fclose(csv);
     }
@@ -230,8 +230,9 @@ void intercalar_particoes(int qtd_particoes) {
             fwrite(&produtos_particao[menor], sizeof(Produto),1, arq_produtos);
             fputc('\n', arq_produtos);
             
-            contador++;
+            
             gravar_arquivo_indice(&contador, ultimo_id, posicao, indice_base, indice_topo);
+            contador++;
         }
 
         if(fread(&produtos_particao[menor], sizeof(Produto), 1, particoes[menor]) != 1) {

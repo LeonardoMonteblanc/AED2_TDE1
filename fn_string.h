@@ -51,4 +51,17 @@ void str_remover_quebra(char* linha);
  */
 int str_separar_linha(char* linha, char* campos[], int max);
 
+/**
+ * @brief Recebe o ponteiro do arquivo_csv e da linha
+ * 
+ * @details Faz um loop por cada linha removendo quebras, separando a linha e validando
+ * 
+ * @param[in] arquivo_csv arquivo csv que está aberto para leitura
+ * @param[out] linha linha que é lida 
+ * 
+ * @param[out] campos depois que a linha foi "tratada", prenche o vetor e retorna (vetor que será escrito no arquivo bin)
+ * 
+ * @return 1 se sucesso | 0 se falha
+ */
+int percorrer_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]);
 #endif

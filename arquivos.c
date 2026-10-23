@@ -16,15 +16,15 @@ FILE *abrir_arquivo(char *caminho, char *modo) {
 
 
 //=============== GRAVAR_ARQUIVO_INDICE =============== 
-void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo) {
-    if(*contador % INTERVALO_IDX_BASE == 0) {
+void gravar_arquivo_indice(long long contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo) {
+    if(contador % INTERVALO_IDX_BASE == 0) {
         EntradaIdx e;
         e.chave = chave_registro;
         e.pos = posicao;
         fwrite(&e, sizeof(EntradaIdx), 1, indice_base);
     }
 
-    if(*contador % INTERVALO_IDX_TOPO == 0) {
+    if(contador % INTERVALO_IDX_TOPO == 0) {
         EntradaIdx e;
         e.chave = chave_registro;
         e.pos = posicao;
@@ -209,17 +209,3 @@ void reconstruir_idx_prod() {
 }
 
 
-//=============== FORMATAR_LINHAS_CSV =============== 
-int formatar_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]) {
-    while(fgets(linha, TAM_LINHA, arquivo_csv)) {
-        str_remover_quebra(linha);
-
-        int quant = str_separar_linha(linha, campos, 9);
-        if(quant >= 9) {
-            return 1; // sucesso
-        }
-
-        fprintf(stderr, "AVISO: linha csv invalida: %s\n", linha);
-    }
-    return 0;
-}

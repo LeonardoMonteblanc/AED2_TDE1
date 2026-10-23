@@ -70,19 +70,7 @@ void liberar_dados();
 void reconstruir_idx_prod();
 
 
-/**
- * @brief Recebe o ponteiro do arquivo_csv e da linha
- * 
- * @details Faz um loop por cada linha removendo quebras, separando a linha e validando
- * 
- * @param[in] arquivo_csv arquivo csv que está aberto para leitura
- * @param[out] linha linha que é lida 
- * 
- * @param[out] campos depois que a linha foi "tratada", prenche o vetor e retorna (vetor que será escrito no arquivo bin)
- * 
- * @return 1 se sucesso | 0 se falha
- */
-int formatar_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]);
+
 
 
 #endif
