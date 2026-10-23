@@ -28,6 +28,7 @@ void montar_acesso(char* campos[], int n, Acesso* a) {
     str_formatar_registro(a->evento_time, campos[0], 24);
 }
 
+
 // =============== MONTAR_REGISTRO_PRODUTOS ===============
 void montar_produtos(char* campos[], Produto* p) {
     p->id = atoi(campos[2]);
@@ -248,6 +249,14 @@ void intercalar_particoes(int qtd_particoes) {
 
     free(particoes);
     free(produtos_particao);
+
+    // REMOVE OS ARQUIVOS TEMPORARIOS CRIADOS
+    remove(BIN_TEMP_PROD);
+    char nome_particao[64];
+    for(int i = 0; i < qtd_particoes; i++) {
+        snprintf(nome_particao, sizeof(nome_particao), BIN_PART_PROD, i);
+        remove(nome_particao);
+    }
 
     printf("Produtos unicos: %lld\n", contador);
 

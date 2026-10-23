@@ -28,7 +28,7 @@ int main() {
     int quantidade_particoes = particionar_produtos();
 
     // ETAPA 2.3: INTERCALAR AS PARTICOES REMOVENDO DUPLICADOS + ESCRITA DE PRODUTOS.BIN
-    printf("Produtos gerou %d particoes", quantidade_particoes);
+    printf("Produtos gerou %d particoes\n", quantidade_particoes);
     intercalar_particoes(quantidade_particoes);
     
 
