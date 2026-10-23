@@ -28,7 +28,7 @@ FILE * abrir_arquivo(char *caminho, char *modo);
  * @param[out] indice_base Arquivo indice_base
  * @param[out] indice_topo Arquivo indice_topo
  */
-void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo);
+void gravar_arquivo_indice(long long contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo);
 
 
 /**

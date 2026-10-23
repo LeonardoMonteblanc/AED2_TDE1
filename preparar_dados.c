@@ -92,7 +92,7 @@ long long gravar_bin_acessos() {
         fgets(linha, TAM_LINHA, csv); // pula cabeçalho
         printf("Processano acessos %s\n", arquivos_csv[i]);
 
-        while(formatar_linhas_csv(csv, linha, campos)) {
+        while(percorrer_linhas_csv(csv, linha, campos)) {
             Acesso acesso_registro;
 
             montar_acesso(campos, contador+1, &acesso_registro);
@@ -132,7 +132,7 @@ void gravar_bin_produtos() {
 
         printf("Processando produtos %s..\n", arquivos_csv[i]);
 
-        while(formatar_linhas_csv(csv, linha, campos)) {
+        while(percorrer_linhas_csv(csv, linha, campos)) {
             Produto produto_registro;
 
             montar_produtos(campos, &produto_registro);
@@ -231,7 +231,7 @@ void intercalar_particoes(int qtd_particoes) {
             fputc('\n', arq_produtos);
             
             
-            gravar_arquivo_indice(&contador, ultimo_id, posicao, indice_base, indice_topo);
+            gravar_arquivo_indice(contador, ultimo_id, posicao, indice_base, indice_topo);
             contador++;
         }
 

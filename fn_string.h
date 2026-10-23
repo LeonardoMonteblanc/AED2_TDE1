@@ -1,6 +1,8 @@
 #ifndef FN_STRING_H
 #define FN_STRING_H
 
+#include <stdio.h>
+
 
 /**
  * @brief Formata o registro atual extraido do CSV para um tamanho fixo adicionando espaços ao fim
