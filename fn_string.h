@@ -30,7 +30,7 @@ int str_comparar_strings(char* formatada, char* original);
 unsigned char str_converter_evento(char* texto);
 
 /**
- * @brief Remove quebra de linha ('\n' e\ou '\r') no fim da string
+ * @brief Remove caracteres de quebra de linha do fim da string
  *
  * @param[in,out] linha Ponteiro para string que será modificada
  */
@@ -41,9 +41,9 @@ void str_remover_quebra(char* linha);
  *
  * @details Percorre essa linha e para cada virgula que encontra, separa a string lida em campos
  *
- * @param[in,out] linha Ponteiro da string a ser dividida
- * @param[out] campo Vetor que recebe os ponteiros para o campo estradio
- * @param[in] max Numero maximo de campos a ser extraidos da linha
+ * @param linha  Linha de entrada a ser dividida.
+ * @param campos Vetor de saída com os campos separados.
+ * @param max    Número máximo de campos.
  *
  * @return Quantidade de campos lidos e armazenados
  */

@@ -1,6 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "tipos.h"
+#include "preparar_dados.h"
+#include "arquivos.h"
+#include "consultas.h"
 
 // =============== VARIAVEIS GLOBAIS ===============
 FILE* p_acessos = NULL;
@@ -15,6 +16,9 @@ long long n_prod = 0;
 
 int main() {
     printf("Trabalho AED II - Leonardo Monteblanco\n");
+
+
+     
 
     return 0;
 }
