@@ -39,14 +39,43 @@ void montar_produtos(char* campos[], Produto* p) {
     str_formatar_registro(p->categoria_cod, campos[4], 50);
 }
 
-/* =============== GERAR_BIN ===============
- * Acessos: 1 acesso por linha
- * Acessos_base: 1 EntradaIdx a cada 100 acessos
- * Acessos_topo: 1 EntradaIdx a cada 1000 acessos
- * Temp_prod: 1 prod por linha */
+
+// =============== LER_PARTICOES ===============
+int ler_particoes(int qtd_particoes, FILE **particoes, Produto *produtos_particao) {
+    for(int i = 0; i < qtd_particoes; i++) {
+        char nome[64];
+        snprintf(nome, sizeof(nome), BIN_PART_PROD, i);
+
+        particoes[i] = abrir_arquivo(nome, "rb");
+
+        if(fread(&produtos_particao[i], sizeof(Produto), 1, particoes[i]) != 1) {
+            fclose(particoes[i]);
+            particoes[i] = NULL;
+        }
+    }
+
+    return 1;
+}
 
 
-//NOVA FUNÇÃO
+// =============== MENOR_PARTICAO ===============
+int menor_particao(FILE **particoes, Produto *produtos_particao, int qtd_particoes) {
+    int menor = -1;
+
+    for(int i =0; i< qtd_particoes; i++) {
+        if(!particoes[i]) {
+            continue;
+        }
+        if(menor == -1 || produtos_particao[i].id < produtos_particao[menor].id) {
+            menor = i;
+        }
+    }
+
+    return menor;
+}
+
+
+// =============== GRAVAR_BINARIO_ACESSOS ===============
 long long gravar_bin_acessos() {
     FILE *arq_acessos = abrir_arquivo(BIN_ACESSOS, "wb");
     FILE *indice_base = abrir_arquivo(IDX_BASE, "wb");
@@ -89,8 +118,7 @@ long long gravar_bin_acessos() {
 }
 
 
-
-//NOVA FUNÇÃO
+// =============== GRAVAR_BINARIO_PRODUTOS ===============
 void gravar_bin_produtos() {
     FILE *arq_temporario = abrir_arquivo(BIN_TEMP_PROD, "wb");
 
@@ -119,10 +147,7 @@ void gravar_bin_produtos() {
 }
 
 
-
-/* =============== GERAR_PART_ORDENADA ===============
-Gera uma partição ordenada de produtos apenas com produtos únicos
-*/
+// =============== PARTICIONAR_PRODUTOS ===============
 int particionar_produtos() {
     FILE *arq_temporario, *saida;
     Produto *buffer;
@@ -162,44 +187,9 @@ int particionar_produtos() {
     return num_part;
 }
 
-/* =============== INTERCALA_PART_PROD ===============
-Intercala as partições de produto removendo os repetidos e ordenando
-*/
-//NOVA FUNÇÃO
 
-int ler_particoes(int qtd_particoes, FILE **particoes, Produto *produtos_particao) {
-    for(int i = 0; i < qtd_particoes; i++) {
-        char nome[64];
-        snprintf(nome, sizeof(nome), BIN_PART_PROD, i);
-
-        particoes[i] = abrir_arquivo(nome, "rb");
-
-        if(fread(&produtos_particao[i], sizeof(Produto), 1, particoes[i]) != 1) {
-            fclose(particoes[i]);
-            particoes[i] = NULL;
-        }
-    }
-
-    return 1;
-}
-
-int menor_particao(FILE **particoes, Produto *produtos_particao, int qtd_particoes) {
-    int menor = -1;
-
-    for(int i =0; i< qtd_particoes; i++) {
-        if(!particoes[i]) {
-            continue;
-        }
-        if(menor == -1 || produtos_particao[i].id < produtos_particao[menor].id) {
-            menor = i;
-        }
-    }
-
-    return menor;
-}
-
-
-void intercalar_produtos(int qtd_particoes) {
+// =============== INTERCALAR_PARTICOES ===============
+void intercalar_particoes(int qtd_particoes) {
     if(qtd_particoes <= 0) {
         printf("Nao ha particoes para intercalar....\n");
         return;
