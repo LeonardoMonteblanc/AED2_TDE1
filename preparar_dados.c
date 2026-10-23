@@ -11,15 +11,14 @@
 #include "arquivos.h"
 #include "comparadores.h"
 
-/* =============== MONTAR_REGISTRO_ACESSO ===============
- * Preenche a struct usando os dados do csv
- * Ordem dos campos no CSV:
- * [0] event_time     [4] category_code
- * [1] event_type     [5] brand
- * [2] product_id     [6] price
- * [3] category_id    [7] user_id
- *                    [8] user_session
- */
+// =============== MONTAR_REGISTRO_ACESSO ===============
+//  * Preenche a struct usando os dados do csv
+//  * Ordem dos campos no CSV:
+//  * [0] event_time     [4] category_code
+//  * [1] event_type     [5] brand
+//  * [2] product_id     [6] price
+//  * [3] category_id    [7] user_id
+//  *                    [8] user_session
 void montar_acesso(char* campos[], int n, Acesso* a) {
     a->id = n;
     a->usuario_id = atoi(campos[7]);
@@ -29,8 +28,7 @@ void montar_acesso(char* campos[], int n, Acesso* a) {
     str_formatar_registro(a->evento_time, campos[0], 24);
 }
 
-/* =============== MONTAR_REGISTRO_PRODUTOS ===============
- * Preenche a struct usando os dados do csv */
+// =============== MONTAR_REGISTRO_PRODUTOS ===============
 void montar_produtos(char* campos[], Produto* p) {
     p->id = atoi(campos[2]);
     p->categoria_id = atoll(campos[3]);
