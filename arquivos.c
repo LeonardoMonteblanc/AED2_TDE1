@@ -16,14 +16,14 @@ FILE *abrir_arquivo(char *caminho, char *modo) {
 
 // NOVA FUNÇÃO
 void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo) {
-    if(*contador % ACESSO_BASE == 0) {
+    if(*contador % INTERVALO_IDX_BASE == 0) {
         EntradaIdx e;
         e.chave = chave_registro;
         e.pos = posicao;
         fwrite(&e, sizeof(EntradaIdx), 1, indice_base);
     }
 
-    if(*contador % ACESSO_TOPO == 0) {
+    if(*contador % INTERVALO_IDX_TOPO == 0) {
         EntradaIdx e;
         e.chave = chave_registro;
         e.pos = posicao;
@@ -184,14 +184,14 @@ void reconstruir_idx_prod() {
 
         fgetc(p_prod);
 
-        if(i% PROD_BASE == 0) {
+        if(i% INTERVALO_IDX_BASE == 0) {
             EntradaIdx e;
             e.chave = p.id;
             e.pos = pos;
             fwrite(&e, sizeof(EntradaIdx),1, base);
         }
 
-        if(i%PROD_TOPO == 0) {
+        if(i%INTERVALO_IDX_TOPO == 0) {
             EntradaIdx e;
             e.chave = p.id;
             e.pos = pos;

@@ -36,10 +36,8 @@ para usar com arquivos maiores, precisa das funções ftelli64 e fseeki64*/
 #define IDX_TOPO_PROD DIR_IDX "/topo_prod.idx"
 
 // =============== CONSTANTES ===============
-#define ACESSO_BASE 100
-#define ACESSO_TOPO 1000
-#define PROD_BASE 100
-#define PROD_TOPO 1000
+#define INTERVALO_IDX_BASE 100
+#define INTERVALO_IDX_TOPO 1000
 
 // =============== INDICES ===============
 struct entrada_indice {
