@@ -51,7 +51,4 @@ void str_remover_quebra(char* linha);
  */
 int str_separar_linha(char* linha, char* campos[], int max);
 
-
-
-
 #endif
