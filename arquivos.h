@@ -18,7 +18,15 @@
  */
 FILE * abrir_arquivo(char *caminho, char *modo);
 
-
+/**
+ * @brief Grava em disco os arquivos de indice
+ * 
+ * @param[in] contador Ponteiro com a quantidade de registros processados
+ * @param[in] chave_registro Chave a ser gravada no indice
+ * @param[in] posicao Posicao do registro
+ * @param[out] indice_base Arquivo indice_base
+ * @param[out] indice_topo Arquivo indice_topo
+ */
 void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo);
 
 
