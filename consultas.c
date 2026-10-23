@@ -263,6 +263,13 @@ void consulta_prod_marca(char*marca) {
 }
 
 // CONSULTA 2: CLIENTES UNICOS E FAT DE CADA
+/*
+DIVIDIR EM 
+LER_COMPRAS
+AGRUPAR_POR_USUARIO
+EXIBIR
+
+*/
 void consulta_compradores() {
     long long i;
     long long cap = 1000000;
