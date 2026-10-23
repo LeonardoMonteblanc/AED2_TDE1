@@ -1,5 +1,6 @@
 #include "arquivos.h"
 #include "tipos.h"
+#include "fn_string.h"
 #include <stdlib.h>
 
 //=============== ABRIR_ARQUIVOS =============== 
@@ -13,6 +14,22 @@ FILE *abrir_arquivo(char *caminho, char *modo) {
 	return f;
 }
 
+// NOVA FUNÇÃO
+void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo) {
+    if(*contador % ACESSO_BASE == 0) {
+        EntradaIdx e;
+        e.chave = chave_registro;
+        e.pos = posicao;
+        fwrite(&e, sizeof(EntradaIdx), 1, indice_base);
+    }
+
+    if(*contador % ACESSO_TOPO == 0) {
+        EntradaIdx e;
+        e.chave = chave_registro;
+        e.pos = posicao;
+        fwrite(&e, sizeof(EntradaIdx), 1, indice_topo);
+    }
+}
 
 //=============== CARREGAR_DADOS =============== 
 int carregar_dados() {
@@ -187,4 +204,21 @@ void reconstruir_idx_prod() {
 
     liberar_indice(&idx_prod);
     carregar_idx(IDX_BASE_PROD, IDX_TOPO_PROD, &idx_prod);
+}
+
+
+
+// FORMATAR LINHA PARA GRAVAÇÃO
+int formatar_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]) {
+    while(fgets(linha, TAM_LINHA, arquivo_csv)) {
+        str_remover_quebra(linha);
+
+        int quant = str_separar_linha(linha, campos, 9);
+        if(quant >= 9) {
+            return 1; // sucesso
+        }
+
+        fprintf(stderr, "AVISO: linha csv inválida: %s\n", linha);
+    }
+    return 0;
 }

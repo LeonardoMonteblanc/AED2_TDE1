@@ -1,5 +1,7 @@
 #ifndef FN_STRING_H
 #define FN_STRING_H
+
+
 /**
  * @brief Formata o registro atual extraido do CSV para um tamanho fixo adicionando espaços ao fim
  *
@@ -48,5 +50,8 @@ void str_remover_quebra(char* linha);
  * @return Quantidade de campos lidos e armazenados
  */
 int str_separar_linha(char* linha, char* campos[], int max);
+
+
+
 
 #endif

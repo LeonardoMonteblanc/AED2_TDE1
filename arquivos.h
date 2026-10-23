@@ -18,6 +18,12 @@
  */
 FILE * abrir_arquivo(char *caminho, char *modo);
 
+
+void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo);
+
+
+
+
 /**
  * @brief Carrega indice base e topo para a RAM
  * 
@@ -38,7 +44,6 @@ int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx);
 void liberar_indice(Idx2Niveis* idx);
 
 
-
 /**
  * @brief Abre os arquivos binarios de dados e carrea os indices em memoria, usa os ponteiros globais
  * 
@@ -56,6 +61,23 @@ void liberar_dados();
  * @brief Refaz o index de produtos quando há alguma modificação
  */
 void reconstruir_idx_prod();
+
+
+/**
+ * @brief Recebe o ponteiro do arquivo_csv e da linha
+ * 
+ * @details Faz um loop por cada linha removendo quebras, separando a linha e validando
+ * 
+ * @param[in] arquivo_csv arquivo csv que está aberto para leitura
+ * @param[out] linha linha que é lida 
+ * 
+ * @param[out] campos depois que a linha foi "tratada", prenche o vetor e retorna (vetor que será escrito no arquivo bin)
+ * 
+ * @return 1 se sucesso | 0 se falha
+ */
+int formatar_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]);
+
+
 #endif
 
 

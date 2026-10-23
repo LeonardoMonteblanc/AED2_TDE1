@@ -17,8 +17,15 @@ long long n_prod = 0;
 int main() {
     printf("Trabalho AED II - Leonardo Monteblanco\n");
 
-
+    // ETAPA 1: TRANSFORMAR CSV EM ACESSOS.BIN
+    // GRAVAR BIN_ACESSOS 
+    /*
+        -> gera acessos.bin
+        
+    */
+    long long total = gravar_bin_acessos();
      
+    printf("Acessos gravados %lld\n", total);
 
     return 0;
 }

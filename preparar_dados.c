@@ -44,6 +44,63 @@ void montar_produtos(char* campos[], Produto* p) {
  * Acessos_base: 1 EntradaIdx a cada 100 acessos
  * Acessos_topo: 1 EntradaIdx a cada 1000 acessos
  * Temp_prod: 1 prod por linha */
+
+ // CONVERTE ARQUIVO CSV DE ARQ_ACESSOS PARA 
+// void converter_csv_to_bin(FILE *arq_acessos, Acesso *acesso_registro, long long contador, FILE *indice_base, FILE *indice_topo) {
+//     long long posicao = ftell(arq_acessos);
+
+//     fwrite(acesso_registro, sizeof(Acesso), 1, arq_acessos);
+//     fputc('\n', arq_acessos);
+
+//     gravar_arquivo_indice(contador, acesso_registro->id, posicao, indice_base, indice_topo);
+
+//     (*contador)++;
+// }
+
+//NOVA FUNÇÃO
+
+
+
+
+long long gravar_bin_acessos() {
+    FILE *arq_acessos = abrir_arquivo(BIN_ACESSOS, "wb");
+    FILE *indice_base = abrir_arquivo(IDX_BASE, "wb");
+    FILE *indice_topo = abrir_arquivo(IDX_TOPO, "wb");
+
+    long long contador = 0;
+    char linha[TAM_LINHA];
+    char *campos[9];
+
+    char *arquivos_csv[2] = {CSV_OUT, CSV_NOV};
+    
+    for(int i = 0; i < 2; i++) {
+        FILE *csv = abrir_arquivo(arquivos_csv[i], "r");
+
+        fgets(linha, TAM_LINHA, csv); // pula cabeçalho
+        printf("Processano acessos %s\n", arquivos_csv[i]);
+
+        while(formatar_linhas_csv(csv, linha, campos)) {
+            Acesso acesso_registro;
+
+            montar_acesso(campos, contador+1, &acesso_registro);
+
+            long long posicao = ftell(arq_acessos);
+
+            fwrite(&acesso_registro, sizeof(Acesso), 1, arq_acessos);
+            fputc('\n', arq_acessos);
+
+            gravar_arquivo_indice(&contador, acesso_registro.id, posicao, indice_base, indice_topo);
+        }
+        fclose(csv);
+    }
+
+    fclose(arq_acessos);
+    fclose(indice_base);
+    fclose(indice_topo);
+
+    return contador;
+}
+
 void gerar_bin() {
     FILE* acessos, *base, * topo, *temp_prod;
     int cont, i, ignoradas;

@@ -1,4 +1,5 @@
 #include "fn_string.h"
+#include "tipos.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -84,3 +85,4 @@ int str_separar_linha(char* linha, char* campos[], int max) {
 
     return quant;
 }
+
