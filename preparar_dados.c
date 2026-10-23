@@ -131,7 +131,7 @@ void gravar_bin_produtos() {
         FILE *csv = abrir_arquivo(arquivos_csv[i], "r");
         fgets(linha, TAM_LINHA, csv); // pula cabeçalho
 
-        printf("Processando produtos %s..\n", csv[i]);
+        printf("Processando produtos %s..\n", arquivos_csv[i]);
 
         while(formatar_linhas_csv(csv, linha, campos)) {
             Produto produto_registro;
@@ -214,7 +214,7 @@ void intercalar_particoes(int qtd_particoes) {
     FILE *indice_topo = abrir_arquivo(IDX_TOPO_PROD, "wb");
 
     int ultimo_id = -1;
-    int contador = 0;
+    long long contador = 0;
 
     while(1) {
         int menor = menor_particao(particoes, produtos_particao, qtd_particoes);
@@ -251,7 +251,7 @@ void intercalar_particoes(int qtd_particoes) {
     free(particoes);
     free(produtos_particao);
 
-    printf("Produtos unicos: %d\n", contador);
+    printf("Produtos unicos: %lld\n", contador);
 
 }
 

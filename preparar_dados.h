@@ -1,6 +1,10 @@
 #ifndef PREPARAR_DADOS_H
 #define PREPARAR_DADOS_H
 
+#include "tipos.h"
+#include <stdio.h>
+
+
 void montar_acesso(char* campos[], int n, Acesso* a);
 void montar_produtos(char* campos[], Produto* p);
 

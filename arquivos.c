@@ -219,7 +219,7 @@ int formatar_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]) {
             return 1; // sucesso
         }
 
-        fprintf(stderr, "AVISO: linha csv inválida: %s\n", linha);
+        fprintf(stderr, "AVISO: linha csv invalida: %s\n", linha);
     }
     return 0;
 }
