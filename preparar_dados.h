@@ -61,6 +61,6 @@ int particionar_produtos();
  * 
  * @param[in] qtd_particoes Quantidades de particoes por intercalar
  */
-void intercalar_produtos(int qtd_particoes);
+void intercalar_particoes(int qtd_particoes);
 
 #endif
