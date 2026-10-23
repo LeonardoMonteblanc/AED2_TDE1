@@ -18,6 +18,7 @@
  */
 FILE * abrir_arquivo(char *caminho, char *modo);
 
+
 /**
  * @brief Grava em disco os arquivos de indice
  * 
@@ -28,8 +29,6 @@ FILE * abrir_arquivo(char *caminho, char *modo);
  * @param[out] indice_topo Arquivo indice_topo
  */
 void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo);
-
-
 
 
 /**

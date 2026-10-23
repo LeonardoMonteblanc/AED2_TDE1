@@ -14,7 +14,8 @@ FILE *abrir_arquivo(char *caminho, char *modo) {
 	return f;
 }
 
-// NOVA FUNÇÃO
+
+//=============== GRAVAR_ARQUIVO_INDICE =============== 
 void gravar_arquivo_indice(long long *contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo) {
     if(*contador % INTERVALO_IDX_BASE == 0) {
         EntradaIdx e;
@@ -30,6 +31,78 @@ void gravar_arquivo_indice(long long *contador, int chave_registro, long long po
         fwrite(&e, sizeof(EntradaIdx), 1, indice_topo);
     }
 }
+
+
+//=============== CARREGAR_IDX =============== 
+int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx) {
+    FILE* indice_base, * indice_topo;
+
+    long long tam_base,  tam_topo;
+
+    indice_base = abrir_arquivo(arq_base, "rb");
+    indice_topo = abrir_arquivo(arq_topo, "rb");
+
+
+    fseek(indice_base, 0, SEEK_END);
+    tam_base = ftell(indice_base);
+    fseek(indice_base, 0, SEEK_SET);
+
+    fseek(indice_topo, 0, SEEK_END);
+    tam_topo = ftell(indice_topo);
+    fseek(indice_topo, 0, SEEK_SET);
+
+    idx->qtd_base = (int)(tam_base / sizeof(EntradaIdx));
+    idx->qtd_topo = (int)(tam_topo / sizeof(EntradaIdx));
+
+    idx->base = (EntradaIdx*)malloc(idx->qtd_base * sizeof(EntradaIdx));
+    idx->topo = (EntradaIdx*)malloc(idx->qtd_topo * sizeof(EntradaIdx));
+
+    if (idx->base == NULL || idx->topo == NULL) {
+        printf("Erro: sem memoria para os indices\n");
+
+        if (idx->base != NULL) {
+            free(idx->base);
+            idx->base = NULL;
+        }
+
+        if (idx->topo != NULL) {
+            free(idx->topo);
+            idx->topo = NULL;
+        }
+
+        idx->qtd_base = 0;
+        idx->qtd_topo = 0;
+
+        fclose(indice_base);
+        fclose(indice_topo);
+        return 0;
+    }
+
+    fread(idx->base, sizeof(EntradaIdx), idx->qtd_base, indice_base);
+    fread(idx->topo, sizeof(EntradaIdx), idx->qtd_topo, indice_topo);
+
+    fclose(indice_base);
+    fclose(indice_topo);
+    return 1;
+}
+
+
+//=============== LIBERAR_IDX =============== 
+void liberar_indice(Idx2Niveis* idx) {
+    if (idx->base != NULL) {
+        free(idx->base);
+        idx->base = NULL;
+    }
+
+    if (idx->topo != NULL) {
+        free(idx->topo);
+        idx->topo = NULL;
+    }
+
+    idx->qtd_base = 0;
+    idx->qtd_topo = 0;
+}
+
 
 //=============== CARREGAR_DADOS =============== 
 int carregar_dados() {
@@ -92,77 +165,6 @@ void liberar_dados() {
 }
 
 
-//=============== CARREGAR_IDX =============== 
-int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx) {
-    FILE* fbase, * ftopo;
-
-    long long tam_base,  tam_topo;
-
-    fbase = abrir_arquivo(arq_base, "rb");
-    ftopo = abrir_arquivo(arq_topo, "rb");
-
-
-    fseek(fbase, 0, SEEK_END);
-    tam_base = ftell(fbase);
-    fseek(fbase, 0, SEEK_SET);
-
-    fseek(ftopo, 0, SEEK_END);
-    tam_topo = ftell(ftopo);
-    fseek(ftopo, 0, SEEK_SET);
-
-    idx->qtd_base = (int)(tam_base / sizeof(EntradaIdx));
-    idx->qtd_topo = (int)(tam_topo / sizeof(EntradaIdx));
-
-    idx->base = (EntradaIdx*)malloc(idx->qtd_base * sizeof(EntradaIdx));
-    idx->topo = (EntradaIdx*)malloc(idx->qtd_topo * sizeof(EntradaIdx));
-
-    if (idx->base == NULL || idx->topo == NULL) {
-        printf("Erro: sem memoria para os indices\n");
-
-        if (idx->base != NULL) {
-            free(idx->base);
-            idx->base = NULL;
-        }
-
-        if (idx->topo != NULL) {
-            free(idx->topo);
-            idx->topo = NULL;
-        }
-
-        idx->qtd_base = 0;
-        idx->qtd_topo = 0;
-
-        fclose(fbase);
-        fclose(ftopo);
-        return 0;
-    }
-
-    fread(idx->base, sizeof(EntradaIdx), idx->qtd_base, fbase);
-    fread(idx->topo, sizeof(EntradaIdx), idx->qtd_topo, ftopo);
-
-    fclose(fbase);
-    fclose(ftopo);
-    return 1;
-}
-
-
-//=============== LIBERAR_IDX =============== 
-void liberar_indice(Idx2Niveis* idx) {
-    if (idx->base != NULL) {
-        free(idx->base);
-        idx->base = NULL;
-    }
-
-    if (idx->topo != NULL) {
-        free(idx->topo);
-        idx->topo = NULL;
-    }
-
-    idx->qtd_base = 0;
-    idx->qtd_topo = 0;
-}
-
-
 //=============== RECONSTRUIR_IDX_PROD =============== 
 void reconstruir_idx_prod() {
     FILE * base, *topo;
@@ -207,8 +209,7 @@ void reconstruir_idx_prod() {
 }
 
 
-
-// FORMATAR LINHA PARA GRAVAÇÃO
+//=============== FORMATAR_LINHAS_CSV =============== 
 int formatar_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]) {
     while(fgets(linha, TAM_LINHA, arquivo_csv)) {
         str_remover_quebra(linha);
