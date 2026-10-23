@@ -3,6 +3,15 @@
 Trabalho utilizando [dataset eCommerce behavior](https://www.kaggle.com/datasets/mkechinov/ecommerce-behavior-data-from-multi-category-store)
 
 ---
+
+## Refatoracao
+*Etapas que faltam:*
+
+[ ] Refatorar as consultas<br>
+[ ] Revisar os comparadores<br>
+[ ] Testar e validar + verificar fluxo *(garantir que esta executando corretamente o pipeline)*
+
+---
 ## Consultar a serem realizadas
 
 1. Quais produtos por marca e seu valor?
