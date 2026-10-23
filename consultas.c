@@ -109,7 +109,7 @@ int buscar_produto_com_idx(int prod_id, Produto *out) {
     pos = idx_prod.base[ibase].pos;
     fseek(p_prod, pos, SEEK_SET);
 
-    for(i=0; i < PROD_BASE; i++) {
+    for(i=0; i < INTERVALO_IDX_BASE; i++) {
         if(fread(out, sizeof(Produto), 1, p_prod) != 1) {
             return 0;
         }
@@ -263,6 +263,13 @@ void consulta_prod_marca(char*marca) {
 }
 
 // CONSULTA 2: CLIENTES UNICOS E FAT DE CADA
+/*
+DIVIDIR EM 
+LER_COMPRAS
+AGRUPAR_POR_USUARIO
+EXIBIR
+
+*/
 void consulta_compradores() {
     long long i;
     long long cap = 1000000;

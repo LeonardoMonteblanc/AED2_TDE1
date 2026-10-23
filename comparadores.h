@@ -13,8 +13,6 @@
  * 
  * @return Retorna 0 se iguais | 1 se a > b e -1 se a < b
  */
-
-
 int comparativo_produto(const void *a, const void *b);
 
 

@@ -18,6 +18,19 @@
  */
 FILE * abrir_arquivo(char *caminho, char *modo);
 
+
+/**
+ * @brief Grava em disco os arquivos de indice
+ * 
+ * @param[in] contador Ponteiro com a quantidade de registros processados
+ * @param[in] chave_registro Chave a ser gravada no indice
+ * @param[in] posicao Posicao do registro
+ * @param[out] indice_base Arquivo indice_base
+ * @param[out] indice_topo Arquivo indice_topo
+ */
+void gravar_arquivo_indice(long long contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo);
+
+
 /**
  * @brief Carrega indice base e topo para a RAM
  * 
@@ -38,7 +51,6 @@ int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx);
 void liberar_indice(Idx2Niveis* idx);
 
 
-
 /**
  * @brief Abre os arquivos binarios de dados e carrea os indices em memoria, usa os ponteiros globais
  * 
@@ -56,6 +68,11 @@ void liberar_dados();
  * @brief Refaz o index de produtos quando há alguma modificação
  */
 void reconstruir_idx_prod();
+
+
+
+
+
 #endif
 
 

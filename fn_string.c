@@ -1,4 +1,5 @@
 #include "fn_string.h"
+#include "tipos.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -83,4 +84,19 @@ int str_separar_linha(char* linha, char* campos[], int max) {
     }
 
     return quant;
+}
+
+//=============== percorrer_linhas_csv =============== 
+int percorrer_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]) {
+    while(fgets(linha, TAM_LINHA, arquivo_csv)) {
+        str_remover_quebra(linha);
+
+        int quant = str_separar_linha(linha, campos, 9);
+        if(quant >= 9) {
+            return 1; // sucesso
+        }
+
+        fprintf(stderr, "AVISO: linha csv invalida: %s\n", linha);
+    }
+    return 0;
 }

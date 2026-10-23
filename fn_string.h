@@ -1,5 +1,9 @@
 #ifndef FN_STRING_H
 #define FN_STRING_H
+
+#include <stdio.h>
+
+
 /**
  * @brief Formata o registro atual extraido do CSV para um tamanho fixo adicionando espaços ao fim
  *
@@ -30,7 +34,7 @@ int str_comparar_strings(char* formatada, char* original);
 unsigned char str_converter_evento(char* texto);
 
 /**
- * @brief Remove quebra de linha ('\n' e\ou '\r') no fim da string
+ * @brief Remove caracteres de quebra de linha do fim da string
  *
  * @param[in,out] linha Ponteiro para string que será modificada
  */
@@ -41,12 +45,25 @@ void str_remover_quebra(char* linha);
  *
  * @details Percorre essa linha e para cada virgula que encontra, separa a string lida em campos
  *
- * @param[in,out] linha Ponteiro da string a ser dividida
- * @param[out] campo Vetor que recebe os ponteiros para o campo estradio
- * @param[in] max Numero maximo de campos a ser extraidos da linha
+ * @param linha  Linha de entrada a ser dividida.
+ * @param campos Vetor de saída com os campos separados.
+ * @param max    Número máximo de campos.
  *
  * @return Quantidade de campos lidos e armazenados
  */
 int str_separar_linha(char* linha, char* campos[], int max);
 
+/**
+ * @brief Recebe o ponteiro do arquivo_csv e da linha
+ * 
+ * @details Faz um loop por cada linha removendo quebras, separando a linha e validando
+ * 
+ * @param[in] arquivo_csv arquivo csv que está aberto para leitura
+ * @param[out] linha linha que é lida 
+ * 
+ * @param[out] campos depois que a linha foi "tratada", prenche o vetor e retorna (vetor que será escrito no arquivo bin)
+ * 
+ * @return 1 se sucesso | 0 se falha
+ */
+int percorrer_linhas_csv(FILE *arquivo_csv, char *linha, char *campos[9]);
 #endif

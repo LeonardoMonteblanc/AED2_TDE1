@@ -84,4 +84,9 @@ int inserir_produto(Produto *novo);
  */
 int remover_produto(int prod_id);
 
+
+void consulta_prod_marca(char *marca);
+void consulta_compradores();
+void consulta_fat_categoria();
+
 #endif
