@@ -20,6 +20,7 @@
 //  * [3] category_id    [7] user_id
 //  *                    [8] user_session
 void montar_acesso(char* campos[], int n, Acesso* a) {
+    memset(a, 0, sizeof(*a));   /* zera os 3 bytes de padding do registro */
     a->id = n;
     a->usuario_id = atoi(campos[7]);
     a->produto_id = atoi(campos[2]);
@@ -31,6 +32,7 @@ void montar_acesso(char* campos[], int n, Acesso* a) {
 
 // =============== MONTAR_REGISTRO_PRODUTOS ===============
 void montar_produtos(char* campos[], Produto* p) {
+    memset(p, 0, sizeof(*p));   /* zera os 4 bytes de padding do registro */
     p->id = atoi(campos[2]);
     p->categoria_id = atoll(campos[3]);
     p->preco = atof(campos[6]);

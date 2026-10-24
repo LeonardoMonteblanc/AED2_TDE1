@@ -30,6 +30,8 @@ int main() {
     // ETAPA 2.3: INTERCALAR AS PARTICOES REMOVENDO DUPLICADOS + ESCRITA DE PRODUTOS.BIN
     printf("Produtos gerou %d particoes\n", quantidade_particoes);
     intercalar_particoes(quantidade_particoes);
+
+    //
     
 
     return 0;

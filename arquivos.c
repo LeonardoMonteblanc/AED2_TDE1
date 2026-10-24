@@ -2,6 +2,7 @@
 #include "tipos.h"
 #include "fn_string.h"
 #include <stdlib.h>
+#include <string.h>   
 
 //=============== ABRIR_ARQUIVOS =============== 
 FILE *abrir_arquivo(char *caminho, char *modo) {
@@ -19,6 +20,7 @@ FILE *abrir_arquivo(char *caminho, char *modo) {
 void gravar_arquivo_indice(long long contador, int chave_registro, long long posicao, FILE *indice_base, FILE *indice_topo) {
     if(contador % INTERVALO_IDX_BASE == 0) {
         EntradaIdx e;
+        memset(&e, 0, sizeof(e));
         e.chave = chave_registro;
         e.pos = posicao;
         fwrite(&e, sizeof(EntradaIdx), 1, indice_base);
@@ -26,6 +28,7 @@ void gravar_arquivo_indice(long long contador, int chave_registro, long long pos
 
     if(contador % INTERVALO_IDX_TOPO == 0) {
         EntradaIdx e;
+        memset(&e, 0, sizeof(e));
         e.chave = chave_registro;
         e.pos = posicao;
         fwrite(&e, sizeof(EntradaIdx), 1, indice_topo);
@@ -188,6 +191,7 @@ void reconstruir_idx_prod() {
 
         if(i% INTERVALO_IDX_BASE == 0) {
             EntradaIdx e;
+            memset(&e, 0, sizeof(e));
             e.chave = p.id;
             e.pos = pos;
             fwrite(&e, sizeof(EntradaIdx),1, base);
@@ -195,6 +199,7 @@ void reconstruir_idx_prod() {
 
         if(i%INTERVALO_IDX_TOPO == 0) {
             EntradaIdx e;
+            memset(&e, 0, sizeof(e));
             e.chave = p.id;
             e.pos = pos;
             fwrite(&e, sizeof(EntradaIdx),1, topo);
