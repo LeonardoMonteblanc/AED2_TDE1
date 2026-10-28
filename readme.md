@@ -110,12 +110,6 @@
               </div>
             </td>
             <td style="width: 33.33%; padding: 0; vertical-align: top;">
-              <div style="border: 1px solid #dee2e6; border-left: 6px solid #bf2c3b; border-radius: 8px; padding: 12px 14px; color: #212529; background-color: transparent; height: 100%; min-height: 85px; box-sizing: border-box;">
-                <div style="color: #bf2c3b; font-weight: 700; margin-bottom: 6px; font-size: 13px;">tui.c</div>
-                <div style="color: #212529; font-size: 12px; line-height: 1.4;">Menu interativo</div>
-              </div>
-            </td>
-            <td style="width: 33.33%; padding: 0; vertical-align: top;">
               <div style="border: 1px solid #dee2e6; border-left: 6px solid #6f42c1; border-radius: 8px; padding: 12px 14px; color: #212529; background-color: transparent; height: 100%; min-height: 85px; box-sizing: border-box;">
                 <div style="color: #6f42c1; font-weight: 700; margin-bottom: 6px; font-size: 13px;">Makefile</div>
                 <div style="color: #212529; font-size: 12px; line-height: 1.4;">Build do projeto</div>
