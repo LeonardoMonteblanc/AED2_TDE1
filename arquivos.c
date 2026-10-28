@@ -57,32 +57,33 @@ int carregar_idx(char* arq_base, char* arq_topo, Idx2Niveis* idx) {
     idx->qtd_base = (int)(tam_base / sizeof(EntradaIdx));
     idx->qtd_topo = (int)(tam_topo / sizeof(EntradaIdx));
 
-    idx->base = (EntradaIdx*)malloc(idx->qtd_base * sizeof(EntradaIdx));
-    idx->topo = (EntradaIdx*)malloc(idx->qtd_topo * sizeof(EntradaIdx));
+    idx->base = NULL;
+    idx->topo = NULL;
 
-    if (idx->base == NULL || idx->topo == NULL) {
+    if (idx->qtd_base > 0) {
+        idx->base = (EntradaIdx*)malloc(idx->qtd_base * sizeof(EntradaIdx));
+    }
+
+    if (idx->qtd_topo > 0) {
+        idx->topo = (EntradaIdx*)malloc(idx->qtd_topo * sizeof(EntradaIdx));
+    }
+
+    if ((idx->qtd_base > 0 && idx->base == NULL) || (idx->qtd_topo > 0 && idx->topo == NULL)) {
         printf("Erro: sem memoria para os indices\n");
-
-        if (idx->base != NULL) {
-            free(idx->base);
-            idx->base = NULL;
-        }
-
-        if (idx->topo != NULL) {
-            free(idx->topo);
-            idx->topo = NULL;
-        }
-
-        idx->qtd_base = 0;
-        idx->qtd_topo = 0;
-
+        liberar_indice(idx);
         fclose(indice_base);
         fclose(indice_topo);
         return 0;
     }
 
-    fread(idx->base, sizeof(EntradaIdx), idx->qtd_base, indice_base);
-    fread(idx->topo, sizeof(EntradaIdx), idx->qtd_topo, indice_topo);
+    if ((idx->qtd_base > 0 && fread(idx->base, sizeof(EntradaIdx), idx->qtd_base, indice_base) != (size_t)idx->qtd_base) ||
+        (idx->qtd_topo > 0 && fread(idx->topo, sizeof(EntradaIdx), idx->qtd_topo, indice_topo) != (size_t)idx->qtd_topo)) {
+        printf("Erro: falha ao ler os arquivos de indice\n");
+        liberar_indice(idx);
+        fclose(indice_base);
+        fclose(indice_topo);
+        return 0;
+    }
 
     fclose(indice_base);
     fclose(indice_topo);
@@ -104,6 +105,30 @@ void liberar_indice(Idx2Niveis* idx) {
 
     idx->qtd_base = 0;
     idx->qtd_topo = 0;
+}
+
+
+//=============== DADOS_PRONTOS =============== 
+int dados_prontos(void) {
+    const char* arquivos[] = {
+        BIN_ACESSOS, BIN_PRODUTOS,
+        IDX_BASE, IDX_TOPO,
+        IDX_BASE_PROD, IDX_TOPO_PROD
+    };
+    int i;
+    int total = (int)(sizeof(arquivos) / sizeof(arquivos[0]));
+
+    for(i = 0; i < total; i++) {
+        FILE *f = fopen(arquivos[i], "rb");
+
+        if(f == NULL) {
+            return 0;
+        }
+
+        fclose(f);
+    }
+
+    return 1;
 }
 
 

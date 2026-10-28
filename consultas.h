@@ -33,7 +33,7 @@ void mostrar_produtos(long long ini, long long qtd);
  * 
  * @details só funciona se produtos.bin estiver ordenado pelo id
  * 
- * @param[in] prod_id id que sesta sendo buscado
+ * @param[in] prod_id id que está sendo buscado
  * @param[out] out ponteiro que recebe o produto encontrado
  * 
  * @return 1 se encontrou | 0 se não encontrou
@@ -42,15 +42,63 @@ int busca_bin_produtos(int prod_id, Produto *out);
 
 
 /**
+ * @brief Traduz o codigo do tipo de evento para texto legivel
+ *
+ * @param[in] tipo codigo do evento (0 = view, 1 = cart, 2 = purchase)
+ *
+ * @return string com o nome do evento
+ */
+const char* evento_tipo_texto(unsigned char tipo);
+
+
+/**
+ * @brief Imprime os acessos entre as posicoes informadas
+ *
+ * @param[in] ini posicao inicial do arquivo (0 = comeco)
+ * @param[in] qtd quantidade de acessos que quer ser visto
+ *
+ * @note calcula as posicoes que devem ser lidas do arquivo a partir de ini + tam do registro + qtd
+ */
+void mostrar_acessos(long long ini, long long qtd);
+
+
+/**
+ * @brief Faz uma busca binaria de acesso_id direto no arquivo de acessos.bin
+ *
+ * @details só funciona se acessos.bin estiver ordenado pelo id
+ *
+ * @param[in] acesso_id id sequencial que está sendo buscado
+ * @param[out] out ponteiro que recebe o acesso encontrado
+ *
+ * @return 1 se encontrou | 0 se não encontrou
+ */
+int busca_bin_acessos(int acesso_id, Acesso *out);
+
+
+/**
+ * @brief Busca um acesso usando os indices de 2 niveis de acessos
+ *
+ * @details localiza no indice topo o intervalo e depois busca dentro do indice base
+ * a posicao onde esta o acesso_id e entao percorre o arquivo de dados
+ *
+ * @param[in] acesso_id id do acesso buscado
+ * @param[out] out ponteiro que recebe o acesso encontrado
+ *
+ * @return 1 se encontrou | 0 se não encontrou
+ */
+int buscar_acesso_com_idx(int acesso_id, Acesso *out);
+
+
+/**
  * @brief Busca um produto usando os dois indices
- * 
+ *
  * @details localiza no indice topo o intervalo e depois busca dentro do indice base
  * localiza o intervalo onde esta o prod_id e entao abre o arquivo de dados
  * percorre o arquivo buscando o id
- * 
+ *
  * @param[in] prod_id id do produto buscado
  * @param[out] out Ponteiro de produto que recebe o valor encontrado
- * 
+ *
  * @return 1 se encontrou | 0 se não encontrou
  */
 int buscar_produto_com_idx(int prod_id, Produto *out);

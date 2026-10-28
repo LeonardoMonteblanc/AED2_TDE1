@@ -1,267 +1,279 @@
+#include "tipos.h"
 #include "preparar_dados.h"
+#include "arquivos.h"
+#include "consultas.h"
+#include "fn_string.h"
+#include "comparadores.h"
 
-#include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
-#include "fn_string.h"
-#include "tipos.h"
-#include "arquivos.h"
-#include "comparadores.h"
-
-// =============== MONTAR_REGISTRO_ACESSO ===============
-//  * Preenche a struct usando os dados do csv
-//  * Ordem dos campos no CSV:
-//  * [0] event_time     [4] category_code
-//  * [1] event_type     [5] brand
-//  * [2] product_id     [6] price
-//  * [3] category_id    [7] user_id
-//  *                    [8] user_session
 void montar_acesso(char* campos[], int n, Acesso* a) {
-    memset(a, 0, sizeof(*a));   /* zera os 3 bytes de padding do registro */
-    a->id = n;
-    a->usuario_id = atoi(campos[7]);
+    if (n < 7) return;
+    a->id = atoi(campos[0]);
+    a->usuario_id = atoi(campos[1]);
     a->produto_id = atoi(campos[2]);
-    a->evento_tipo = str_converter_evento(campos[1]);
-    a->preco = atof(campos[6]);
-    str_formatar_registro(a->evento_time, campos[0], 24);
+    a->evento_tipo = (unsigned char)atoi(campos[3]);
+    a->preco = atof(campos[4]);
+    str_formatar_registro(a->evento_time, campos[5], sizeof(a->evento_time));
 }
 
-
-// =============== MONTAR_REGISTRO_PRODUTOS ===============
 void montar_produtos(char* campos[], Produto* p) {
-    memset(p, 0, sizeof(*p));   /* zera os 4 bytes de padding do registro */
-    p->id = atoi(campos[2]);
-    p->categoria_id = atoll(campos[3]);
-    p->preco = atof(campos[6]);
-    str_formatar_registro(p->marca, campos[5], 30);
-    str_formatar_registro(p->categoria_cod, campos[4], 50);
+    p->id = atoi(campos[0]);
+    p->preco = atof(campos[1]);
+    p->categoria_id = atoll(campos[2]);
+    str_formatar_registro(p->marca, campos[3], sizeof(p->marca));
+    str_formatar_registro(p->categoria_cod, campos[4], sizeof(p->categoria_cod));
 }
 
-
-// =============== LER_PARTICOES ===============
-int ler_particoes(int qtd_particoes, FILE **particoes, Produto *produtos_particao) {
-    for(int i = 0; i < qtd_particoes; i++) {
-        char nome[64];
-        snprintf(nome, sizeof(nome), BIN_PART_PROD, i);
-
-        particoes[i] = abrir_arquivo(nome, "rb");
-
-        if(fread(&produtos_particao[i], sizeof(Produto), 1, particoes[i]) != 1) {
-            fclose(particoes[i]);
-            particoes[i] = NULL;
+int ler_particoes(int qtd_particoes, FILE** particoes, Produto* produtos_particao) {
+    for (int i = 0; i < qtd_particoes; i++) {
+        if (fread(&produtos_particao[i], sizeof(Produto), 1, particoes[i]) != 1) {
+            return 0;
         }
+        fgetc(particoes[i]);
     }
-
     return 1;
 }
 
-
-// =============== MENOR_PARTICAO ===============
-int menor_particao(FILE **particoes, Produto *produtos_particao, int qtd_particoes) {
-    int menor = -1;
-
-    for(int i =0; i< qtd_particoes; i++) {
-        if(!particoes[i]) {
-            continue;
-        }
-        if(menor == -1 || produtos_particao[i].id < produtos_particao[menor].id) {
-            menor = i;
+int menor_particao(Produto* produtos_particao, int qtd_particoes) {
+    int menor_idx = -1;
+    for (int i = 0; i < qtd_particoes; i++) {
+        if (menor_idx == -1 || produtos_particao[i].id < produtos_particao[menor_idx].id) {
+            menor_idx = i;
         }
     }
-
-    return menor;
+    return menor_idx;
 }
 
-
-// =============== GRAVAR_BINARIO_ACESSOS ===============
 long long gravar_bin_acessos() {
-    FILE *arq_acessos = abrir_arquivo(BIN_ACESSOS, "wb");
-    FILE *indice_base = abrir_arquivo(IDX_BASE, "wb");
-    FILE *indice_topo = abrir_arquivo(IDX_TOPO, "wb");
+    FILE* f_out = abrir_arquivo(BIN_ACESSOS, "wb");
+    FILE* idx_base = abrir_arquivo(IDX_BASE, "wb");
+    FILE* idx_topo = abrir_arquivo(IDX_TOPO, "wb");
 
-    long long contador = 0;
     char linha[TAM_LINHA];
-    char *campos[9];
+    long long contador = 0;
+    long long pos;
 
-    char *arquivos_csv[2] = {CSV_OUT, CSV_NOV};
-    
-    for(int i = 0; i < 2; i++) {
-        FILE *csv = abrir_arquivo(arquivos_csv[i], "r");
+    FILE* f_nov = abrir_arquivo(CSV_NOV, "r");
+    fgets(linha, TAM_LINHA, f_nov);
 
-        fgets(linha, TAM_LINHA, csv); // pula cabeçalho
-        printf("Processano acessos %s\n", arquivos_csv[i]);
-
-        while(percorrer_linhas_csv(csv, linha, campos)) {
-            Acesso acesso_registro;
-
-            montar_acesso(campos, contador+1, &acesso_registro);
-
-            long long posicao = ftell(arq_acessos);
-
-            fwrite(&acesso_registro, sizeof(Acesso), 1, arq_acessos);
-            fputc('\n', arq_acessos);
-
-            gravar_arquivo_indice(contador, acesso_registro.id, posicao, indice_base, indice_topo);
-
-            contador++;
+    while (fgets(linha, TAM_LINHA, f_nov)) {
+        char* campos[7];
+        int n = 0;
+        char* token = strtok(linha, ",");
+        while (token && n < 7) {
+            campos[n++] = token;
+            token = strtok(NULL, ",");
         }
-        fclose(csv);
-    }
+        if (n < 7) continue;
 
-    fclose(arq_acessos);
-    fclose(indice_base);
-    fclose(indice_topo);
+        Acesso a;
+        montar_acesso(campos, n, &a);
+
+        pos = ftell(f_out);
+        fwrite(&a, sizeof(Acesso), 1, f_out);
+        fputc('\n', f_out);
+
+        gravar_arquivo_indice(contador, a.id, pos, idx_base, idx_topo);
+        contador++;
+    }
+    fclose(f_nov);
+
+    FILE* f_out2 = abrir_arquivo(CSV_OUT, "r");
+    fgets(linha, TAM_LINHA, f_out2);
+
+    while (fgets(linha, TAM_LINHA, f_out2)) {
+        char* campos[7];
+        int n = 0;
+        char* token = strtok(linha, ",");
+        while (token && n < 7) {
+            campos[n++] = token;
+            token = strtok(NULL, ",");
+        }
+        if (n < 7) continue;
+
+        Acesso a;
+        montar_acesso(campos, n, &a);
+
+        pos = ftell(f_out);
+        fwrite(&a, sizeof(Acesso), 1, f_out);
+        fputc('\n', f_out);
+
+        gravar_arquivo_indice(contador, a.id, pos, idx_base, idx_topo);
+        contador++;
+    }
+    fclose(f_out2);
+
+    fclose(f_out);
+    fclose(idx_base);
+    fclose(idx_topo);
 
     return contador;
 }
 
-
-// =============== GRAVAR_BINARIO_PRODUTOS ===============
 void gravar_bin_produtos() {
-    FILE *arq_temporario = abrir_arquivo(BIN_TEMP_PROD, "wb");
-
-    char *arquivos_csv[2] = {CSV_OUT, CSV_NOV};
-
+    FILE* f_prod = abrir_arquivo(BIN_TEMP_PROD, "wb");
+    FILE* f_nov = abrir_arquivo(CSV_NOV, "r");
     char linha[TAM_LINHA];
-    char *campos[9];
+    fgets(linha, TAM_LINHA, f_nov);
 
-    for(int i = 0; i < 2; i++) {
-        FILE *csv = abrir_arquivo(arquivos_csv[i], "r");
-        fgets(linha, TAM_LINHA, csv); // pula cabeçalho
-
-        printf("Processando produtos %s..\n", arquivos_csv[i]);
-
-        while(percorrer_linhas_csv(csv, linha, campos)) {
-            Produto produto_registro;
-
-            montar_produtos(campos, &produto_registro);
-            fwrite(&produto_registro, sizeof(Produto), 1, arq_temporario);
+    while (fgets(linha, TAM_LINHA, f_nov)) {
+        char* campos[5];
+        int n = 0;
+        char* token = strtok(linha, ",");
+        while (token && n < 5) {
+            campos[n++] = token;
+            token = strtok(NULL, ",");
         }
-        fclose(csv);
-    }
+        if (n < 5) continue;
 
-    fclose(arq_temporario);
-    
+        Produto p;
+        montar_produtos(campos, &p);
+        fwrite(&p, sizeof(Produto), 1, f_prod);
+        fputc('\n', f_prod);
+    }
+    fclose(f_nov);
+
+    FILE* f_out = abrir_arquivo(CSV_OUT, "r");
+    fgets(linha, TAM_LINHA, f_out);
+
+    while (fgets(linha, TAM_LINHA, f_out)) {
+        char* campos[5];
+        int n = 0;
+        char* token = strtok(linha, ",");
+        while (token && n < 5) {
+            campos[n++] = token;
+            token = strtok(NULL, ",");
+        }
+        if (n < 5) continue;
+
+        Produto p;
+        montar_produtos(campos, &p);
+        fwrite(&p, sizeof(Produto), 1, f_prod);
+        fputc('\n', f_prod);
+    }
+    fclose(f_out);
+    fclose(f_prod);
 }
 
-
-// =============== PARTICIONAR_PRODUTOS ===============
 int particionar_produtos() {
-    FILE *arq_temporario, *saida;
-    Produto *buffer;
-    
-    size_t bytes_buffer, lidos;
-    
-    int num_part;
-    char nome[64];
+    long long tam_reg = sizeof(Produto) + 1;
+    FILE* f = abrir_arquivo(BIN_TEMP_PROD, "rb");
+    fseek(f, 0, SEEK_END);
+    long long total_regs = ftell(f) / tam_reg;
+    fseek(f, 0, SEEK_SET);
 
-    arq_temporario = abrir_arquivo(BIN_TEMP_PROD, "rb");
+    int qtd_particoes = (total_regs + REGISTRO_BLOCO - 1) / REGISTRO_BLOCO;
+    if (qtd_particoes == 0) qtd_particoes = 1;
 
-    bytes_buffer = (size_t) REGISTRO_BLOCO * sizeof(Produto);
-    buffer = (Produto*) malloc(bytes_buffer);
+    for (int i = 0; i < qtd_particoes; i++) {
+        char nome[128];
+        sprintf(nome, BIN_PART_PROD, i);
+        FILE* part = abrir_arquivo(nome, "wb");
 
-    if (buffer == NULL) {
-        printf("Erro: memoria insufieciente para buffer\n");
-        fclose(arq_temporario);
-        return 0;
+        long long regs_nesta = (i == qtd_particoes - 1) ? (total_regs - i * REGISTRO_BLOCO) : REGISTRO_BLOCO;
+        if (regs_nesta <= 0) { fclose(part); continue; }
+
+        Produto* buffer = malloc(regs_nesta * sizeof(Produto));
+        for (long long j = 0; j < regs_nesta; j++) {
+            fread(&buffer[j], sizeof(Produto), 1, f);
+            fgetc(f);
+        }
+
+        qsort(buffer, regs_nesta, sizeof(Produto), comparativo_produto);
+
+        for (long long j = 0; j < regs_nesta; j++) {
+            fwrite(&buffer[j], sizeof(Produto), 1, part);
+            fputc('\n', part);
+        }
+
+        free(buffer);
+        fclose(part);
     }
-
-    num_part = 0;
-
-    while ((lidos = fread(buffer, sizeof(Produto), REGISTRO_BLOCO, arq_temporario)) > 0) {
-        qsort(buffer, lidos, sizeof(Produto), comparativo_produto);
-        snprintf(nome, sizeof(nome), BIN_PART_PROD, num_part);
-
-        saida = abrir_arquivo(nome, "wb");
-
-        fwrite(buffer, sizeof(Produto), lidos, saida);
-        fclose(saida);
-
-        num_part++;
-    }
-
-    free(buffer);
-    fclose(arq_temporario);
-    return num_part;
+    fclose(f);
+    return qtd_particoes;
 }
 
-
-// =============== INTERCALAR_PARTICOES ===============
 void intercalar_particoes(int qtd_particoes) {
-    if(qtd_particoes <= 0) {
-        printf("Nao ha particoes para intercalar....\n");
-        return;
+    FILE** particoes = malloc(qtd_particoes * sizeof(FILE*));
+    Produto* produtos_particao = malloc(qtd_particoes * sizeof(Produto));
+
+    for (int i = 0; i < qtd_particoes; i++) {
+        char nome[128];
+        sprintf(nome, BIN_PART_PROD, i);
+        particoes[i] = abrir_arquivo(nome, "rb");
     }
 
-    // ALOCAÇÃO DE MEMORIA PARA LEITURA DAS PARTIÇÕES
-    FILE **particoes = malloc(qtd_particoes * sizeof(FILE *));
-    Produto *produtos_particao = malloc(qtd_particoes * sizeof(Produto));
-
-    if(!particoes || !produtos_particao) {
-        printf("Memoria insuficiente para alocar as particoes...\n");
-        free(particoes);
-        free(produtos_particao);
-        return;
-    }
-
-    // ACESSO AS PARTIÇÕES
     ler_particoes(qtd_particoes, particoes, produtos_particao);
 
-    FILE *arq_produtos = abrir_arquivo(BIN_PRODUTOS, "wb");
-    FILE *indice_base = abrir_arquivo(IDX_BASE_PROD, "wb");
-    FILE *indice_topo = abrir_arquivo(IDX_TOPO_PROD, "wb");
+    FILE* f_prod = abrir_arquivo(BIN_PRODUTOS, "wb");
+    FILE* idx_base = abrir_arquivo(IDX_BASE_PROD, "wb");
+    FILE* idx_topo = abrir_arquivo(IDX_TOPO_PROD, "wb");
 
-    int ultimo_id = -1;
     long long contador = 0;
+    long long pos;
 
-    while(1) {
-        int menor = menor_particao(particoes, produtos_particao, qtd_particoes);
+    while (1) {
+        int idx = menor_particao(produtos_particao, qtd_particoes);
+        if (idx == -1) break;
 
-        if(menor == -1)  {
-            break;
-        }
+        Produto p = produtos_particao[idx];
+        int id_atual = p.id;
 
-        //verificar se o produto é novo
-        if(produtos_particao[menor].id != ultimo_id) {
-            ultimo_id = produtos_particao[menor].id;
+        pos = ftell(f_prod);
+        fwrite(&p, sizeof(Produto), 1, f_prod);
+        fputc('\n', f_prod);
+        gravar_arquivo_indice(contador, p.id, pos, idx_base, idx_topo);
+        contador++;
 
-            long long posicao = ftell(arq_produtos);
-            fwrite(&produtos_particao[menor], sizeof(Produto),1, arq_produtos);
-            fputc('\n', arq_produtos);
-            
-            
-            gravar_arquivo_indice(contador, ultimo_id, posicao, indice_base, indice_topo);
+        while (1) {
+            if (fread(&produtos_particao[idx], sizeof(Produto), 1, particoes[idx]) != 1) {
+                produtos_particao[idx].id = -1;
+                break;
+            }
+            fgetc(particoes[idx]);
+            if (produtos_particao[idx].id != id_atual) break;
+
+            pos = ftell(f_prod);
+            fwrite(&produtos_particao[idx], sizeof(Produto), 1, f_prod);
+            fputc('\n', f_prod);
+            gravar_arquivo_indice(contador, produtos_particao[idx].id, pos, idx_base, idx_topo);
             contador++;
         }
-
-        if(fread(&produtos_particao[menor], sizeof(Produto), 1, particoes[menor]) != 1) {
-            fclose(particoes[menor]);
-            particoes[menor] = NULL;
-        }
     }
 
-    fclose(arq_produtos);
-    for(int i =0; i<qtd_particoes; i++) {
-        if(particoes[i]) {
-            fclose(particoes[i]);
-        }
-    }
-
+    for (int i = 0; i < qtd_particoes; i++) fclose(particoes[i]);
     free(particoes);
     free(produtos_particao);
 
-    // REMOVE OS ARQUIVOS TEMPORARIOS CRIADOS
-    remove(BIN_TEMP_PROD);
-    char nome_particao[64];
-    for(int i = 0; i < qtd_particoes; i++) {
-        snprintf(nome_particao, sizeof(nome_particao), BIN_PART_PROD, i);
-        remove(nome_particao);
+    fclose(f_prod);
+    fclose(idx_base);
+    fclose(idx_topo);
+
+    for (int i = 0; i < qtd_particoes; i++) {
+        char nome[128];
+        sprintf(nome, BIN_PART_PROD, i);
+        remove(nome);
     }
-
-    printf("Produtos unicos: %lld\n", contador);
-
+    remove(BIN_TEMP_PROD);
 }
 
+void executar_pipeline(void) {
+    printf("Gerando acessos.bin + indices...\n");
+    n_acessos = gravar_bin_acessos();
+    printf("Acessos: %lld\n", n_acessos);
+
+    printf("Gerando produtos temp...\n");
+    gravar_bin_produtos();
+
+    printf("Particionando produtos...\n");
+    int qtd = particionar_produtos();
+    printf("Particoes: %d\n", qtd);
+
+    printf("Intercalando particoes...\n");
+    intercalar_particoes(qtd);
+
+    printf("Pipeline concluido.\n");
+}

@@ -6,6 +6,29 @@
 #include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+// =============== PAGINACAO DA CONSULTA 1 ===============
+#define LINHAS_PAGINA 25
+
+/* pausa apenas com entrada interativa (tty real; o pty do Git Bash tambem
+   e reconhecido pelo _isatty). pipes comuns (scripts) nao pausam. */
+static int entrada_interativa(void) {
+    return _isatty(_fileno(stdin));
+}
+
+static void pausar_paginacao(int linha) {
+    int c;
+
+    if(linha <= 0 || linha % LINHAS_PAGINA != 0 || !entrada_interativa()) {
+        return;
+    }
+
+    printf("\n-- ENTER para continuar --\n");
+
+    while((c = getchar()) != '\n' && c != EOF) {
+    }
+}
 
 // =============== BUSCA_BIN_IDX ===============
 int busca_bin_idx(EntradaIdx* lista, int ini, int fim, int chave) {
@@ -55,6 +78,52 @@ void mostrar_produtos(long long ini, long long qtd) {
 }
 
 
+// =============== EVENTO_TIPO_TEXTO ===============
+const char* evento_tipo_texto(unsigned char tipo) {
+    switch (tipo) {
+        case 0:  return "view";
+        case 1:  return "cart";
+        case 2:  return "purchase";
+        default: return "desconhecido";
+    }
+}
+
+
+// =============== MOSTRAR_ACESSOS ===============
+void mostrar_acessos(long long ini, long long qtd) {
+    long long i;
+    long long tam_reg = sizeof(Acesso) + 1;
+
+    if(ini < 0) {
+        ini = 0;
+    }
+
+    if(ini + qtd > n_acessos) {
+        qtd = n_acessos - ini;
+    }
+
+    if(qtd <= 0) {
+        printf("Nenhum acesso para mostrar\n");
+        return;
+    }
+
+    fseek(p_acessos, ini * tam_reg, SEEK_SET);
+
+    for(i = 0; i < qtd; i++) {
+        Acesso a;
+
+        if(fread(&a, sizeof(Acesso), 1, p_acessos) != 1) {
+            break;
+        }
+
+        fgetc(p_acessos);
+
+        printf("[%lld] id=%d | user=%d | prod=%d | %s | R$ %.2f | %.24s\n",
+               ini+i, a.id, a.usuario_id, a.produto_id, evento_tipo_texto(a.evento_tipo), a.preco, a.evento_time);
+    }
+}
+
+
 // =============== BUSCA_BINARIA_PRODUTOS ===============
 int busca_bin_produtos(int prod_id, Produto *out) {
     long long esq =0;
@@ -65,7 +134,10 @@ int busca_bin_produtos(int prod_id, Produto *out) {
         long long meio = (esq + dir) /2;
 
         fseek(p_prod, meio * tam_reg, SEEK_SET);
-        fread(out, sizeof(Produto), 1, p_prod);
+
+        if(fread(out, sizeof(Produto), 1, p_prod) != 1) {
+            return 0;
+        }
 
         if(out->id == prod_id) {
             return 1;
@@ -82,8 +154,39 @@ int busca_bin_produtos(int prod_id, Produto *out) {
 }
 
 
+// =============== BUSCA_BINARIA_ACESSOS ===============
+int busca_bin_acessos(int acesso_id, Acesso *out) {
+    long long esq = 0;
+    long long dir = n_acessos - 1;
+    long long tam_reg = sizeof(Acesso) + 1;
+
+    while(esq <= dir) {
+        long long meio = (esq + dir) / 2;
+
+        fseek(p_acessos, meio * tam_reg, SEEK_SET);
+
+        if(fread(out, sizeof(Acesso), 1, p_acessos) != 1) {
+            return 0;
+        }
+
+        if(out->id == acesso_id) {
+            return 1;
+        }
+
+        if(out->id < acesso_id) {
+            esq = meio + 1;
+        } else {
+            dir = meio - 1;
+        }
+    }
+
+    return 0;
+}
+
+
 // =============== BUSCAR_PRODUTO_COM_IDX ===============
 int buscar_produto_com_idx(int prod_id, Produto *out) {
+    int razao = INTERVALO_IDX_TOPO / INTERVALO_IDX_BASE;
     int itopo, ibase, ini_base, fim_base, i;
     long long pos;
 
@@ -93,8 +196,8 @@ int buscar_produto_com_idx(int prod_id, Produto *out) {
         return 0;
     }
 
-    ini_base = itopo * 10;
-    fim_base = ini_base + 9;
+    ini_base = itopo * razao;
+    fim_base = ini_base + razao - 1;
 
     if(fim_base >= idx_prod.qtd_base) {
         fim_base = idx_prod.qtd_base - 1;
@@ -121,6 +224,53 @@ int buscar_produto_com_idx(int prod_id, Produto *out) {
         } 
 
         if(out->id > prod_id) {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+// =============== BUSCAR_ACESSO_COM_IDX ===============
+int buscar_acesso_com_idx(int acesso_id, Acesso *out) {
+    int razao = INTERVALO_IDX_TOPO / INTERVALO_IDX_BASE;
+    int itopo, ibase, ini_base, fim_base, i;
+    long long pos;
+
+    itopo = busca_bin_idx(idx_acessos.topo, 0, idx_acessos.qtd_topo - 1, acesso_id);
+
+    if(itopo < 0) {
+        return 0;
+    }
+
+    ini_base = itopo * razao;
+    fim_base = ini_base + razao - 1;
+
+    if(fim_base >= idx_acessos.qtd_base) {
+        fim_base = idx_acessos.qtd_base - 1;
+    }
+
+    ibase = busca_bin_idx(idx_acessos.base, ini_base, fim_base, acesso_id);
+
+    if(ibase < 0) {
+        return 0;
+    }
+
+    pos = idx_acessos.base[ibase].pos;
+    fseek(p_acessos, pos, SEEK_SET);
+
+    for(i = 0; i < INTERVALO_IDX_BASE; i++) {
+        if(fread(out, sizeof(Acesso), 1, p_acessos) != 1) {
+            return 0;
+        }
+
+        fgetc(p_acessos);
+
+        if(out->id == acesso_id) {
+            return 1;
+        }
+
+        if(out->id > acesso_id) {
             return 0;
         }
     }
@@ -256,6 +406,7 @@ void consulta_prod_marca(char*marca) {
         if(str_comparar_strings(p.marca, marca)) {
             printf("  id=%d | R$ %.2f | %s\n", p.id, p.preco, p.categoria_cod);
             c++;
+            pausar_paginacao(c);
         }
     }
 
@@ -304,13 +455,18 @@ void consulta_compradores() {
         }
 
         if(n_compras >= cap) {
-            cap *= 2;
-            compras = (CompraRegistro *) realloc(compras, cap *sizeof(CompraRegistro));
+            CompraRegistro *maior;
 
-            if(compras == NULL) {
+            cap *= 2;
+            maior = (CompraRegistro *) realloc(compras, cap * sizeof(CompraRegistro));
+
+            if(maior == NULL) {
                 printf("Nao foi possivel alocar memoria para consulta 2\n");
+                free(compras);
                 return;
             }
+
+            compras = maior;
         }
 
         compras[n_compras].usuario_id = a.usuario_id;
@@ -390,7 +546,7 @@ void consulta_fat_categoria() {
 
     AgregadoCategoria *cats;
 
-    printf("\nFATURAMENTO POR CATEGORI\n");
+    printf("\nFATURAMENTO POR CATEGORIA\n");
     cats = (AgregadoCategoria*) malloc(cap * sizeof(AgregadoCategoria));
 
     if(cats == NULL) {
@@ -432,13 +588,18 @@ void consulta_fat_categoria() {
 
         } else {
             if(n_cats >= cap) {
-                cap *= 2;
-                cats = (AgregadoCategoria *) realloc(cats, cap * sizeof(AgregadoCategoria));
+                AgregadoCategoria *maior;
 
-                if(cats == NULL) {
+                cap *= 2;
+                maior = (AgregadoCategoria *) realloc(cats, cap * sizeof(AgregadoCategoria));
+
+                if(maior == NULL) {
                     printf("Nao foi possivel realocar memoria para consulta 3\n");
+                    free(cats);
                     return;
                 }
+
+                cats = maior;
             }
         cats[n_cats].categoria_id = prod.categoria_id;
         cats[n_cats].qtd = 1;
