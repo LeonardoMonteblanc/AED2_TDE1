@@ -11,7 +11,7 @@ void montar_produtos(char* campos[], Produto* p);
 /**
  * @brief Abre as particoes, verifica o primeiro registro de cada
  * 
- * @param[in] qtd_particoes Quantidade de partices a ser lidas
+ * @param[in] qtd_particoes Quantidade de particoes a serem lidas
  * @param[out] particoes Lista dos arquivos de particoes
  * @param[out] produtos_particao Lista dos produtos lidos das particoes
  * 
@@ -30,7 +30,7 @@ int ler_particoes(int qtd_particoes, FILE **particoes, Produto *produtos_partica
  * 
  * @return 1 se sucesso
  */
-int menor_particao(FILE **particoes, Produto *produtos_particao, int qtd_particoes);
+int menor_particao(Produto* produtos_particao, int qtd_particoes);
 
 
 /**
@@ -66,5 +66,14 @@ int particionar_produtos();
  * @param[in] qtd_particoes Quantidades de particoes por intercalar
  */
 void intercalar_particoes(int qtd_particoes);
+
+
+/**
+ * @brief Executa todas as etapas de preparacao dos dados (CSV -> BIN + indices)
+ * 
+ * @details Ordem das etapas: 1. Gera acessos.bin + indices | 2. Gera temp_prod.bin
+ * 3. Particiona temp_prod.bin | 4. Intercala as particoes -> produtos.bin + indices
+ */
+void executar_pipeline(void);
 
 #endif

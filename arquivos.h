@@ -52,6 +52,16 @@ void liberar_indice(Idx2Niveis* idx);
 
 
 /**
+ * @brief Verifica se os arquivos de dados e indices ja foram gerados
+ * 
+ * @note evita reprocessar os CSVs a cada execucao do programa
+ * 
+ * @return 1 se todos os arquivos existem | 0 se falta algum
+ */
+int dados_prontos(void);
+
+
+/**
  * @brief Abre os arquivos binarios de dados e carrea os indices em memoria, usa os ponteiros globais
  * 
  * @return 1 em caso de sucesso | 0 em caso de falha
